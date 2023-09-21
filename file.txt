@@ -2,11 +2,15 @@
 
 
 int main() {
-    int y = 6.6;
+    int y = 30;
+    double c = 4.5;
     float e = 3.1 ;
-    char ch = a;
+    char ch = 'a';
     int z;
     bool a = false;
-    string str = ab;
-    std::cout << y;
+    string str = "ab";
+    string h = "cdeee";
+    z = 14 + c;
+
+    std::cout << z;
 }
