@@ -1,16 +1,10 @@
 #include <iostream>
 
-
-int main() {
-    int y = 30;
-    double c = 4.5;
-    float e = 3.1 ;
-    char ch = 'a';
+int main () {
     int z;
-    bool a = false;
-    string str = "ab";
-    string h = "cdeee";
-    z = 14 + c;
-
-    std::cout << z;
+    int x = 8.8;
+    int y = x;
+    std::cout << y;
+    char ch = 'c';
+    bool flag = false;
 }
