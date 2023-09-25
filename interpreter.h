@@ -10,11 +10,25 @@
 #include <vector>
 #include <iostream>
 #include <vector>
+#include <stack>
 
 class Interpreter {
 public:
     Interpreter();
-    void parse(std::ifstream& file, int i); // parsing3 file line by line
+    void parse(std::ifstream& file, int i); // parsing file line by line
+    void check_vars(std::string& str1, std::string& str2); // checking given variables are already declared variables or literals
+
+    template <typename T>
+    void add(std::string& res, std::string& str1, std::string& str2);
+
+    template <typename T>
+    void sub(std::string& res, std::string& op1, std::string& op2);
+
+    template <typename T>
+    void multiply(std::string& res, std::string& op1, std::string& op2);
+
+    template <typename T>
+    void divide(std::string& res, std::string& op1, std::string& op2);
 
 private:
     std::map<int, std::vector<std::string>> rows; // contains each line, key - is line number, value - strings of that line
@@ -25,8 +39,7 @@ private:
     std::map<std::string, std::pair<std::string, bool>> bool_vars; // saving bool variables // key - variable name, value - variable value
     std::map<std::string, std::pair<std::string, std::string>> string_vars;// saving string variables // key - variable name, value - variable value
     std::map<int, std::string> types;
-    int eip = 0; // instruction ptr
-    bool main_exists = false;
+    
 
 private:
     //helper functions
@@ -42,11 +55,11 @@ private:
     std::string find_key_by_value(std::map<std::string, int>& my_map, int target_value); // find key of map by value
     bool is_single_char(const std::string& str); // checking if string is single character
     bool last_char_is_semicolon(std::string& str); // checking if last character of line is ';' semilcon
-    char convert_to_char(const std::string& str); // convert string to char by checking if inside string is value that is type of char if not throw exception
-    int convert_to_int(const std::string& str); // convert string to int by checking if inside string is value that is type of int if not throw exception
-    double convert_to_double(const std::string& str); // convert string to double by checking if inside string is value that is type of double if not throw exception
-    float convert_to_float(const std::string& str); // convert string to float by checking if inside string is value that is type of float if not throw exception
-    bool convert_to_bool(const std::string& str); // convert string to bool by checking if inside string is value that is type of bool if not throw exception
+    // char convert_to_char(const std::string& str); // convert string to char by checking if inside string is value that is type of char if not throw exception
+    // int convert_to_int(std::string& str); // convert string to int by checking if inside string is value that is type of int if not throw exception
+    // double convert_to_double(const std::string& str); // convert string to double by checking if inside string is value that is type of double if not throw exception
+    // float convert_to_float(const std::string& str); // convert string to float by checking if inside string is value that is type of float if not throw exception
+    // bool convert_to_bool(const std::string& str); // convert string to bool by checking if inside string is value that is type of bool if not throw exception
     std::string type_of_var(const std::string& token); // detecting type of variable
 
     template<typename T>
@@ -69,11 +82,27 @@ private:
     void fill_var_with_given_variable_value(const std::string& row0, const std::string& row1, std::string& row2);  // fill variable with given variable value
     std::string concatenate_and_remove_spaces(const std::vector<std::string>& vector); // concat all strings in vector and remove spaces
     void check_redefinition(const std::string& str); // check variable redefinition
-    void check_existence_of_semicolons(std::vector<std::string>& tokens); // checks existence of semicolons
+    bool check_existence_of_semicolons(std::vector<std::string>& tokens, int& eip); // checks existence of semicolons
     void remove_semicolons(std::vector<std::string>& tokens); // remove semicolons
     void zero_token_is_type(std::vector<std::string>& tokens); // case when tokens[0] is type
     void zero_token_is_var(std::vector<std::string>& tokens); //case when tokens[0] is variable
     void cout(std::vector<std::string>& tokens); //cout
+    bool parse_header_file(std::vector<std::string>& tokens, int& eip, bool& header_file_exists);
+    bool parse_main(std::vector<std::string>& tokens, int& eip, bool& main_exists);
+
+    template <typename T>
+    T convert_to_type(std::string& str);
+    void adding_cases(std::vector<std::string>& tokens, std::string& dest_var, int first, int second); 
+    void sub_cases(std::vector<std::string>& tokens, std::string& dest_var, int first, int second);
+    void mul_cases(std::vector<std::string>& tokens, std::string& dest_var, int first, int second);
+    void div_cases(std::vector<std::string>& tokens, std::string& dest_var, int first, int second);
+
+    bool is_one_byte_integer(int num);
+    void get_var_value_inside(std::string& str);
+    void is_valid_parentheses(std::stack<char>& st, char str);
+    std::string find_brace(const std::vector<std::string>& vec);
+    bool brace_exist(const std::vector<std::string>& vec);
+    bool last_char_is_scope(std::string& str);
 };
 
 #endif
