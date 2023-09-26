@@ -1,13 +1,15 @@
 #include <iostream>
 
-int main () {
-  int x = 170;
-  int y = x;
-  int z = 5;
-  z += x;
-  z += y;
-  z -= x;
-  std::cout << z;
-    
+int main() {
+  int x = 30;
+  int y = 5;
+  x = y - x;
+
+  if (x < 7) {
+    x = 16;
+  }
+
+   x += 45;
+   std::cout << x;
 }
 
