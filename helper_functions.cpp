@@ -187,6 +187,31 @@ std::string Interpreter::find_brace(const std::vector<std::string>& vec) {
     return found_braces;
 }
 
+bool Interpreter::find_open_close_brace(const std::string& str, char brace) {
+        for (char ch : str) {
+            if (ch == brace) {
+                return true;
+            }
+        }
+
+    return false;
+}
+
+std::string Interpreter::remove_quotes_preserve_whitespace(const std::string& input) {
+    std::string output;
+    bool inside_quotes = false;
+
+    for (char c : input) {
+        if (c == '\'') {
+            inside_quotes = !inside_quotes; 
+        } else if (inside_quotes) {
+            output += c;
+        }
+    }
+
+    return output;
+}
+
 void Interpreter::check_redefinition(const std::string& str) {
     try {
         if (is_declared_variable(str)) {

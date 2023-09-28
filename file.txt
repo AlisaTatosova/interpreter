@@ -5,20 +5,41 @@ int main() {
   int b = 31;
   int c = a + b;
   a += b;
-  std::cout << a;
-  std::cout << b;
+  std::cout << a << std::endl;
+  std::cout << b << std::endl;
   b *= c;
   a = c  / 2;
-  std::cout << c;
+  std::cout << c << std::endl;
   int d = 2;
   d = a;
 
-  
-  std::cout << d;
+  std::cout << d << std::endl;
   if (d == 0) {
-    std::cout << "hello";
+    std::cout << "hello"  << std::endl;
   }
   string e = "world";
   e += "k";
-  std::cout << e;
+  std::cout << e  << std::endl;
+
+    if (e == "worldk") {
+      d = 80;
+      std::cout << "hello" << std::endl;
+      if (d == a) {
+        std::cout << "why" << std::endl;
+
+        if (c != 121) {
+          std::cout << "no" << std::endl;
+
+        }
+
+        std::cout << "yes"  << std::endl;
+      }
+    }
+
+    bool r = 1;
+    std::cout << r;
+    double k = 12 + 14.4;
+    std::cout << k;
+    std::cout << d;
+
 }

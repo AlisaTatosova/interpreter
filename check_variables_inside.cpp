@@ -1,7 +1,7 @@
 #include "interpreter.h"
 
 //type , op1, op2
-std::pair<std::string, std::string> Interpreter::check_variables_inside(std::string& str1, std::string& str2, bool flag) {
+std::pair<std::string, std::string> Interpreter::check_variables_inside(const std::string& str1, const std::string& str2) {
     std::string tmp1 = str1;
     std::string tmp2 = str2;
     if (is_declared_variable(str1) && is_declared_variable(str2)) { // case if op1 and op2 are already declared variables
@@ -12,8 +12,8 @@ std::pair<std::string, std::string> Interpreter::check_variables_inside(std::str
             throw std::invalid_argument("The types are not muching for operation");
         }   
 
-        get_var_value_inside(tmp1, flag); //getting value inside var
-        get_var_value_inside(tmp2, flag); //getting value inside var
+        get_var_value_inside(tmp1); //getting value inside var
+        get_var_value_inside(tmp2); //getting value inside var
         
     } else if (is_declared_variable(str1) && !is_declared_variable(str2)) { // case that first op is declared var second is literal
         // if one operand is string the other not it is not appropirate
@@ -22,12 +22,12 @@ std::pair<std::string, std::string> Interpreter::check_variables_inside(std::str
         } 
 
         if (type_of_var(str1) == "string" && has_first_and_last_double_quotes(str2)) {
-            remove_double_quotes(str2);
+            remove_double_quotes(tmp2);
         } else if (has_first_and_last_single_quotes(str2)) {
-            remove_single_quotes(str2);
+            remove_single_quotes(tmp2);
         } 
 
-        get_var_value_inside(tmp1, flag); //getting value inside var
+        get_var_value_inside(tmp1); //getting value inside var
         
     } else if (!is_declared_variable(str1) && is_declared_variable(str2)) { // case that first op is literal second declared var
         // if one operand is string the other not it is not appropirate
@@ -36,9 +36,9 @@ std::pair<std::string, std::string> Interpreter::check_variables_inside(std::str
         } 
 
         if (type_of_var(str2) == "string" && has_first_and_last_double_quotes(str1)) {
-            remove_double_quotes(str1);
+            remove_double_quotes(tmp1);
         } else if (has_first_and_last_single_quotes(str1)) {
-            remove_single_quotes(str1);
+            remove_single_quotes(tmp1);
         } 
 
         // else if (!is_number(str1) && str1 != "true" && str1 != "false") { // cheking if given as vars operands are valid
@@ -46,7 +46,7 @@ std::pair<std::string, std::string> Interpreter::check_variables_inside(std::str
         //     //return;    
         // }
 
-        get_var_value_inside(tmp2, flag); //getting value inside var
+        get_var_value_inside(tmp2); //getting value inside var
 
     } else if (!is_declared_variable(str1) && !is_declared_variable(str2)) { // if both operand1 and operand2 are literals
         // if one operand is string the other not it is not appropirate
@@ -57,11 +57,11 @@ std::pair<std::string, std::string> Interpreter::check_variables_inside(std::str
         }  
         
         if (has_first_and_last_double_quotes(str1) && has_first_and_last_double_quotes(str2)) {
-            remove_double_quotes(str1);
-            remove_double_quotes(str2);
+            remove_double_quotes(tmp1);
+            remove_double_quotes(tmp2);
         } else if (has_first_and_last_single_quotes(str1) && has_first_and_last_single_quotes(str2)) {
-            remove_single_quotes(str1);
-            remove_single_quotes(str2);
+            remove_single_quotes(tmp1);
+            remove_single_quotes(tmp2);
         } 
 
         // else if (!is_number(str2) && str2 != "true" && str2 != "false") { // cheking if given as vars operands are valid
@@ -79,7 +79,7 @@ std::pair<std::string, std::string> Interpreter::check_variables_inside(std::str
 }
 
 // str i declared variable, like str = 5; we are making str as 5
-void Interpreter::get_var_value_inside(std::string& str, bool flag) {
+void Interpreter::get_var_value_inside(std::string& str) {
     if (type_of_var(str) == "char") {
         str = std::to_string(char_vars[str].second);
     } else if (type_of_var(str) == "int") {
