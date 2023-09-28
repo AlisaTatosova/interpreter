@@ -1,15 +1,24 @@
 #include <iostream>
 
 int main() {
-  int x = 30;
-  int y = 5;
-  x = y - x;
+  int a = 90;
+  int b = 31;
+  int c = a + b;
+  a += b;
+  std::cout << a;
+  std::cout << b;
+  b *= c;
+  a = c  / 2;
+  std::cout << c;
+  int d = 2;
+  d = a;
 
-  if (x < 7) {
-    x = 16;
+  
+  std::cout << d;
+  if (d == 0) {
+    std::cout << "hello";
   }
-
-   x += 45;
-   std::cout << x;
+  string e = "world";
+  e += "k";
+  std::cout << e;
 }
-

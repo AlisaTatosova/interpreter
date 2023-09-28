@@ -4,18 +4,6 @@ Interpreter::Interpreter() {
     std::srand(static_cast<unsigned int>(std::time(nullptr)));
 }
 
-bool Interpreter::is_one_byte_integer(int num) {
-    // Check if the number is within the range of an 8-bit signed integer (-128 to 127)
-    if (num >= -128 && num <= 127) {
-        return true;
-    }
-    // Check if the number is within the range of an 8-bit unsigned integer (0 to 255)
-    if (num >= 0 && num <= 255) {
-        return true;
-    }
-    return false;
-}
-
 template <>
 char Interpreter::convert_to_type(std::string& str) {
     if (is_single_char(str)) {
@@ -29,6 +17,7 @@ char Interpreter::convert_to_type(std::string& str) {
 
 template <>
 int Interpreter::convert_to_type(std::string& str) {
+    
     if (has_first_and_last_double_quotes(str)) {
         remove_double_quotes(str);
     } else if (has_first_and_last_single_quotes(str)) {
@@ -101,6 +90,8 @@ void Interpreter::parse(std::ifstream& file, int i) {
     std::stack<char> st;
     bool inside_if_statement = false;
     bool do_not_enter_if_statment = false;
+    bool inside_while = false;
+    bool do_not_enter_while = false;
 
     std::string line;
     while (std::getline(file, line)) { // Read the file line by line
@@ -111,6 +102,8 @@ void Interpreter::parse(std::ifstream& file, int i) {
         while (iss >> token) { // Split the line into words by spaces
             tokens.push_back(token);
         }
+
+        const std::string str = (if_inside.size() != 0) ? "inside_if" : "";
 
         if (tokens.empty()) { // if line is empty
             continue;
@@ -155,106 +148,25 @@ void Interpreter::parse(std::ifstream& file, int i) {
             continue;
         }
 
+        if (do_not_enter_while && !(tokens[0] == "}")) {
+            continue;
+        }
 
+        // is variable declaration parsing
         if (tokens[0] == "char" || tokens[0] == "int" || tokens[0] == "double" || tokens[0] == "float" || tokens[0] == "bool" || tokens[0] == "string") {
-            zero_token_is_type(tokens, inside_if_statement); // token[0] is type // gaving flags to not take as redefinition declaration of same name variable in if statment
-        } else if (tokens.size() == 3 && is_declared_variable(tokens[0]) && tokens[1] == "=") {
-            zero_token_is_var(tokens, inside_if_statement); // // token[0] is variable
+            zero_token_is_type_parse(tokens, inside_if_statement); // token[0] is type // gaving flags to not take as redefinition declaration of same name variable in if statment
+        } 
+        
+        
+        else if (is_declared_variable(tokens[0] + str)) { // parse exprression where first token is variable
+            first_token_is_variable_parse(tokens, inside_if_statement);
         } else if (tokens[0] == "std::cout" && tokens[1] == "<<" && tokens.size() == 3) {
             cout(tokens, inside_if_statement);
-        } 
-        
-        else if (tokens.size() == 5 && is_declared_variable(tokens[0]) && tokens[1] == "=") { 
-            std::string tmp;
-            if (!if_inside.empty()) { // if if_inside vector is not empty it means that we are inside if statment // and the declaration of variable with same name as outside of if will not cause redefinition and it will have another name as varnameinside_if
-                tmp = tokens[0] + "inside_if";
-            } else {
-                tmp = tokens[0];
+        } else if (tokens[0] == "if" && brace_exist(tokens)) { // handling if statment
+            parse_if_statement(tokens, inside_if_statement, do_not_enter_if_statment);
+            if (do_not_enter_if_statment) {
+                continue;
             }
-
-           check_vars(tokens[2], tokens[4], inside_if_statement); // checking types of op1 and op2 before some operation and make op1 and op2 as values inside them like op1 = x, op2 = y, after this function op1 = (value inside x), op2 = (value inside y)
-            if (tokens[3] == "+") {
-                adding_cases(tokens, tmp, 2, 4);
-            } else if (tokens[3] == "-") {
-                sub_cases(tokens, tmp, 2, 4);
-            } else if (tokens[3] == "*") {
-                mul_cases(tokens, tmp, 2, 4);
-            } else if (tokens[3] == "/") {
-                div_cases(tokens, tmp, 2, 4);
-            }
-        } else if (tokens.size() == 3 && is_declared_variable(tokens[0])) {
-            std::string tmp;
-            if (!if_inside.empty()) {
-                tmp = tokens[0] + "inside_if";
-            } else {
-                tmp = tokens[0];
-            }
-
-            check_vars(tokens[0], tokens[2], inside_if_statement); // checking types of op1 and op2 before some operation to make precise castings
-            if (tokens[1] == "+=") {
-                adding_cases(tokens, tmp, 0, 2);
-            } else if (tokens[1] == "-=") {
-                sub_cases(tokens, tmp, 0, 2);
-            } else if (tokens[1] == "*=") {
-                mul_cases(tokens, tmp, 0, 2);
-            } else if (tokens[1] == "/=") {
-                div_cases(tokens, tmp, 0, 2);
-            }           
-        } 
-        
-        
-        else if (tokens[0] == "if" && brace_exist(tokens)) { // handling if statment
-            if (find_brace(tokens).size() > 3) {
-                std::cout << "extraneous brace" << std::endl;
-                return;
-            } if (find_brace(tokens).size() < 3) {
-                std::cout << "missing brace" << std::endl;
-                return;
-            }
-
-            // extracting ( ) s from if statement now we have for example if x != y {
-            extract_paren(tokens[1], '('); 
-            extract_paren(tokens[3], ')');
-
-            //checking condition
-            if (tokens[2] == "==") {
-                check_vars(tokens[1], tokens[3], inside_if_statement);
-                if (tokens[1] != tokens[3]) { // do not enter if
-                    do_not_enter_if_statment = true;
-                    continue;
-                } 
-            } else if (tokens[2] == "!=") {
-                check_vars(tokens[1], tokens[3], inside_if_statement);
-                if (tokens[1] == tokens[3]) { // do not enter if
-                    do_not_enter_if_statment = true;
-                    continue;
-                }  
-            } else if (tokens[2] == ">") {
-                check_vars(tokens[1], tokens[3], inside_if_statement);
-                if (tokens[1] <= tokens[3]) { // do not enter if
-                    do_not_enter_if_statment = true;
-                    continue;
-                }
-            } else if (tokens[2] == ">=") {
-                check_vars(tokens[1], tokens[3], inside_if_statement);
-                if (tokens[1] < tokens[3]) { // do not enter if
-                    do_not_enter_if_statment = true;
-                    continue;
-                }
-            } else if (tokens[2] == "<") {
-                check_vars(tokens[1], tokens[3], inside_if_statement);
-                if (tokens[1] >= tokens[3]) { // do not enter if
-                    do_not_enter_if_statment = true;
-                    continue;
-                }
-            } else if (tokens[2] == "<=") {
-                check_vars(tokens[1], tokens[3], inside_if_statement);
-                if (tokens[1] > tokens[3]) { // do not enter if
-                    do_not_enter_if_statment = true;
-                    continue;
-                }
-            }
-
 
             // checking braces correctness in if statement
             for (int i = 0; i < find_brace(tokens).size(); ++i) {
@@ -263,15 +175,12 @@ void Interpreter::parse(std::ifstream& file, int i) {
                     inside_if_statement = true;
                     continue;
                 } else {
-                    std::cout << "wrong brace in if statment" << std::endl;
+                    std::cout << "syntax error in if statment" << std::endl;
                     return;
                 }
             }
 
-            
-
-        } else if (tokens[0] == "}") {
-            if (inside_if_statement) {
+        } else if (tokens[0] == "}" && inside_if_statement) {
                 inside_if_statement = false; 
                 // deleting variables declared inside if stament after closing } scope
                 for (const std::string& key : if_inside) {
@@ -283,12 +192,20 @@ void Interpreter::parse(std::ifstream& file, int i) {
                     delete_key_from_map(string_vars, key);
                 }
                 if_inside.clear(); // clearing vector which keeps the declared vars in if statment scope
-            } else {
-                do_not_enter_if_statment = false;
-            }
+        } else if (tokens[0] == "}" && !inside_if_statement ) { /// ? karoxa avelorda
+            do_not_enter_if_statment = false; // het e, darcnum false if ic durs galuc heto
+        } 
+
+        else if (tokens[0] == "if" && brace_exist(tokens)) {
+            parse_while(tokens, inside_while, do_not_enter_while);
         }
         
-
+        // else if (!is_declared_variable(tokens[0])) { // cheack if variable is declared
+        //     if ((tokens.size() == 3 && tokens[1] == "=") || (tokens.size() == 5  && tokens[1] == "=" && (tokens[3] == "+" || tokens[3] == "-" || tokens[3] == "*" || tokens[3] == "/")) || (tokens.size() == 3 && (tokens[1] == "+=" || tokens[1] == "-=" || tokens[1] == "*=" || tokens[1] == "/="))) {
+        //        std::cout << "Variable " << tokens[0] << " is not declared" << std::endl;
+        //     } 
+        // }
+        
         rows[eip] = tokens;
         ++eip;
     }
@@ -298,8 +215,6 @@ void Interpreter::parse(std::ifstream& file, int i) {
         return;
     }
 
-    // std::cout << std::endl;
-    // std::cout << "here it is ";
     // std::cout << std::endl;
 
     // for (auto it = integer_vars.begin(); it != integer_vars.end(); ++it) {
@@ -314,10 +229,109 @@ void Interpreter::parse(std::ifstream& file, int i) {
     file.close(); // Close the file when done
 }
 
-std::string Interpreter::extract_paren(std::string& input, char brace) {
-    size_t pos = input.find(brace);  // Find the position of the first '('
-    if (pos != std::string::npos) {  // Check if '(' was found
-        input.erase(pos, 1);   // Extract the substring up to the first '('
+void Interpreter::parse_while(std::vector<std::string>& tokens, bool& while_flag, bool& while_enter_flag) {
+    if (find_brace(tokens).size() > 3) {
+        std::cout << "extraneous brace" << std::endl;
+        return;
+    } if (find_brace(tokens).size() < 3) {
+        std::cout << "missing brace" << std::endl;
+        return;
+    }   
+
+    extract_paren(tokens[1], '('); 
+    extract_paren(tokens[3], ')');
+
+    //checking condition
+    if (tokens[2] == "==") {
+        std::pair<std::string, std::string> pair = check_variables_inside(tokens[1], tokens[3], while_flag);
+        if (pair.first != pair.second) { // do not enter if
+            while_enter_flag = true;
+            //continue;
+        } 
+    } else if (tokens[2] == "!=") {
+        std::pair<std::string, std::string> pair = check_variables_inside(tokens[1], tokens[3], while_flag);
+        if (pair.first == pair.second) { // do not enter if
+            while_enter_flag = true;
+            //continue;
+        }  
+    } else if (tokens[2] == ">") {
+        std::pair<std::string, std::string> pair = check_variables_inside(tokens[1], tokens[3], while_flag);
+        if (pair.first <= pair.second) { // do not enter if
+            while_enter_flag = true;
+            //continue;
+        }
+    } else if (tokens[2] == ">=") {
+        std::pair<std::string, std::string> pair = check_variables_inside(tokens[1], tokens[3], while_flag);
+        if (pair.first < pair.second) { // do not enter if
+            while_enter_flag = true;
+            //continue;
+        }
+      } else if (tokens[2] == "<") {
+        //std::cout << tokens[1] << " " << tokens[3];
+        std::pair<std::string, std::string> pair = check_variables_inside(tokens[1], tokens[3], while_flag);
+        if (pair.first >= pair.second) { // do not enter if
+            while_enter_flag = true;
+            //continue;
+        }
+    } else if (tokens[2] == "<=") {
+        std::pair<std::string, std::string> pair = check_variables_inside(tokens[1], tokens[3], while_flag);
+        if (pair.first > pair.second) { // do not enter if
+            while_enter_flag = true;
+            //continue;
+        }
+    }
+}
+
+void Interpreter::parse_if_statement(std::vector<std::string>& tokens, bool& if_flag, bool& if_enter_flag) {
+    if (find_brace(tokens).size() > 3) {
+        std::cout << "extraneous brace" << std::endl;
+        return;
+    } if (find_brace(tokens).size() < 3) {
+        std::cout << "missing brace" << std::endl;
+        return;
+    }
+
+    // extracting ( ) s from if statement now we have for example if x != y {
+    extract_paren(tokens[1], '('); 
+    extract_paren(tokens[3], ')');
+
+    //checking condition
+    if (tokens[2] == "==") {
+        std::pair<std::string, std::string> pair = check_variables_inside(tokens[1], tokens[3], if_flag);
+        if (pair.first != pair.second) { // do not enter if
+            if_enter_flag = true;
+            //continue;
+        } 
+    } else if (tokens[2] == "!=") {
+        std::pair<std::string, std::string> pair = check_variables_inside(tokens[1], tokens[3], if_flag);
+        if (pair.first == pair.second) { // do not enter if
+            if_enter_flag = true;
+            //continue;
+        }  
+    } else if (tokens[2] == ">") {
+        std::pair<std::string, std::string> pair = check_variables_inside(tokens[1], tokens[3], if_flag);
+        if (pair.first <= pair.second) { // do not enter if
+            if_enter_flag = true;
+            //continue;
+        }
+    } else if (tokens[2] == ">=") {
+        std::pair<std::string, std::string> pair = check_variables_inside(tokens[1], tokens[3], if_flag);
+        if (pair.first < pair.second) { // do not enter if
+            if_enter_flag = true;
+            //continue;
+        }
+      } else if (tokens[2] == "<") {
+        std::pair<std::string, std::string> pair = check_variables_inside(tokens[1], tokens[3], if_flag);
+        if (pair.first >= pair.second) { // do not enter if
+            if_enter_flag = true;
+            //continue;
+        }
+    } else if (tokens[2] == "<=") {
+        std::pair<std::string, std::string> pair = check_variables_inside(tokens[1], tokens[3], if_flag);
+        if (pair.first > pair.second) { // do not enter if
+            if_enter_flag = true;
+            //continue;
+        }
     }
 }
 
@@ -327,58 +341,6 @@ void Interpreter::delete_key_from_map(std::map<std::string, T>& map, const std::
     if (it != map.end()) {
         map.erase(it);
     }
-}
-
-bool Interpreter::last_char_is_semicolon(std::string& str) {
-    if (str[str.size() - 1] == ';') {
-        return true;
-    }
-    return false;
-}
-
-bool Interpreter::last_char_is_scope(std::string& str) {
-    if (str[str.size() - 1] == '}' || str[str.size() - 1] == '{') {
-        return true;
-    }
-    return false;
-}
-
-bool Interpreter::contains_semicolon(const std::string& str) {
-    return str.find(';') != std::string::npos;
-}
-
-void Interpreter::remove_semicolon(std::string& input) {
-    input = input.substr(0, input.size() - 1); // extract the substring without the semicolon
-}
-
-bool Interpreter::check_existence_of_semicolons(std::vector<std::string>& tokens, int& eip) {
-    if (eip > 1 && tokens[tokens.size() - 1] != ";" && !last_char_is_semicolon(tokens[tokens.size() - 1])) {
-        if (!(tokens[tokens.size()- 1] == "}" || tokens[tokens.size()- 1] == "{" || last_char_is_scope(tokens[tokens.size() - 1]))) {
-            std::cout << "You forgot ; at the end of line" << std::endl;
-            return false;
-        }
-    }  
-    return true;
-}
-
-// removing ; s from code
-void Interpreter::remove_semicolons(std::vector<std::string>& tokens) {
-    for (int i = 0; i < tokens.size(); ++i) {
-        if (tokens[i] == ";") {
-            tokens.pop_back();
-        } else if (contains_semicolon(tokens[i])) {
-            remove_semicolon(tokens[i]);
-        } 
-    }
-}
-
-std::string Interpreter::concatenate_and_remove_spaces(const std::vector<std::string>& vector) {
-    std::string concat;
-    for (const std::string& str : vector) {
-        concat += str;
-    }
-    concat.erase(std::remove_if(concat.begin(), concat.end(), ::isspace), concat.end());
-    return concat;
 }
 
 template<typename T>
@@ -395,167 +357,24 @@ bool Interpreter::is_declared_variable(const std::string& token) {
            is_declared_variable(token, string_vars);
 }
 
-bool Interpreter::is_number(const std::string& str) {
-    if (str.empty()) {
-        return false; // Empty string is not a number
-    }
-
-    // Check for negative sign at the beginning
-    size_t start = 0;
-    if (str[0] == '-' || str[0] == '+') {
-        start = 1;
-    }
-
-    bool has_dot = false; // To track if there's a decimal point
-
-    for (size_t i = start; i < str.length(); ++i) {
-        if (str[i] == '.') {
-            // Found a decimal point
-            if (has_dot) {
-                return false; // Multiple decimal points are not allowed
-            }
-            has_dot = true;
-        } else if (!std::isdigit(str[i])) {
-            return false; // Found a non-digit character
-        }
-    }
-
-    try {
-        // Try converting the string to a double to handle scientific notation, etc.
-        std::stod(str);
-        return true;
-    } catch (const std::invalid_argument& e) {
-        return false; // Conversion failed
-    }
-}
-
-void Interpreter::remove_double_quotes(std::string& input) {
-    if (input.front() == '"' && input.back() == '"') {
-        input = input.substr(1, input.length() - 2);
-    } else {
-        throw std::invalid_argument("There is no double quotes "" ");
-    }
-}
-
-void Interpreter::remove_single_quotes(std::string& input) {
-    if (!input.empty() && input.front() == '\'') {
-        input = input.substr(1);
-    }
-
-    if (!input.empty() && input.back() == '\'') {
-        input.pop_back();
-    } else {
-        throw std::invalid_argument("There is no single quotes '' ");
-    }
-}
-
-bool Interpreter::has_first_and_last_double_quotes(const std::string& input) {
-    if (input.size() >= 2) {
-        return (input.front() == '"' && input.back() == '"');
-    } else {
-        return false; // The string is too short to have first and last quotes
-    }
-}
-
-bool Interpreter::has_first_and_last_single_quotes(const std::string& input) {
-    if (input.size() >= 2) {
-        return (input.front() == '\'' && input.back() == '\'');
-    } else {
-        return false; // The string is too short to have first and last single quotes
-    }
-}
-
-bool Interpreter::parse_header_file(std::vector<std::string>& tokens, int& eip, bool& header_file_exists) {
-    // checking existence of <iostream> header file
-    if (eip == 0 && tokens[0] == "#include" && tokens[1] == "<iostream>") { 
-        ++eip;
-        header_file_exists = true;
-    } else if (eip == 0 && tokens[0] != "#include" && tokens[1] != "<iostream>") {
-        std::cout <<  "There is no header file included. Please input the header file" << std::endl;
-    } 
-    return header_file_exists;
-}
-
-bool Interpreter::parse_main(std::vector<std::string>& tokens, int& eip, bool& main_exists) {
-    // checking existence of int main
-    if (eip == 1 && tokens[0] == "int") {
-        std::string concat = concatenate_and_remove_spaces(tokens);
-        if (concat == "intmain(){") {
-            main_exists = true;
-            rows[eip] = tokens;
-            ++eip;
-        } else if (concat == "intmain()") {
-            //std::cout << "There is no opening scope '{' for main function" << std::endl;
-        } else {
-            std::cout << "There is no main function to start program" << std::endl;
-        }
-    }
-    return main_exists;
-}
-
-void Interpreter::zero_token_is_type(std::vector<std::string>& tokens, bool flag) {
-    const std::string str = (flag == true) ? "inside_if" : "";
-
-    if (tokens.size() == 2) { // case that int x; simple declaration
-        if (!flag) {
-            check_redefinition(tokens[1]);
-        }
-        fill_with_garbage(tokens[0], tokens[1]);
-    } else if (tokens[2] == "=" && !is_declared_variable(tokens[3])) { // case if int x = 5; like declaration
-        if (!flag) {
-            check_redefinition(tokens[1]);
-        }
-        if (!is_number(tokens[3]) && !has_first_and_last_double_quotes(tokens[3]) && !has_first_and_last_single_quotes(tokens[3]) && tokens[3] != "false" && tokens[3] != "true") {
-            std::cout << "Error: "  << tokens[3] <<  " was not declared in this scope " << std::endl; // int x = y, y is not declared
-            return;
-        }
-        
-        fill_var_with_given_value(tokens[0], tokens[1], tokens[3], str);
-        
-    } else if (tokens[2] == "=" && is_declared_variable(tokens[3])) { // int x = y, y is declared
-        if (!flag) {
-            check_redefinition(tokens[1]);
-        }
-        fill_var_with_given_variable_value(tokens[0], tokens[1], tokens[3], str);
-    } 
-}
-
-void Interpreter::zero_token_is_var(std::vector<std::string>& tokens, bool flag) {
-    const std::string str = "";
-    if (flag && is_declared_variable(tokens[0] + "inside_if")) {
-        const std::string str = "inside_if";
-    }
-    
-    if (!is_declared_variable(tokens[2])) { // case x = 5; // x is declared
-        if (!is_number(tokens[2]) && !has_first_and_last_double_quotes(tokens[2]) && !has_first_and_last_single_quotes(tokens[2]) && tokens[2] != "false" && tokens[2] != "true") {
-            std::cout << "Error: "  << tokens[2] <<  " was not declared in this scope " << std::endl; // int x = y, y is not declared
-            return;
-        }
-        
-        fill_var_with_given_value(type_of_var(tokens[0]), tokens[0], tokens[2], str);
-        
-    } else { // case x = y;
-        fill_var_with_given_variable_value(tokens[0], tokens[1], tokens[2], str);
-    }
-}
-
 void Interpreter::cout(std::vector<std::string>& tokens, bool flag) {
     const std::string str = (if_inside.size() != 0) ? "inside_if" : "";
-    // es masy petqa dzel verevi parse() um petqa arandzin funkcia sarqel is declaraition 
     if (is_number(tokens[2])) {
         std::cout << tokens[2];
-    } else if (is_declared_variable(tokens[2])) {
-        if (type_of_var(tokens[2]) == "char") {
+    } else if (is_declared_variable(tokens[2] + str)) {
+        if (type_of_var(tokens[2] + str) == "char") {
             std::cout << char_vars[tokens[2] + str].second;
-        } else if (type_of_var(tokens[2]) == "int") {
+        } else if (type_of_var(tokens[2] + str) == "int") {
+            std::cout << std::endl;
             std::cout << integer_vars[tokens[2] + str].second;
-        } else if (type_of_var(tokens[2]) == "double") {
+            std::cout << std::endl;
+        } else if (type_of_var(tokens[2] + str) == "double") {
             std::cout << double_vars[tokens[2] + str].second;
-        } else if (type_of_var(tokens[2]) == "float") {
+        } else if (type_of_var(tokens[2] + str) == "float") {
             std::cout << float_vars[tokens[2] + str].second;
-        } else if (type_of_var(tokens[2]) == "bool") {
+        } else if (type_of_var(tokens[2] + str) == "bool") {
             std::cout << bool_vars[tokens[2] + str].second;
-        } else if (type_of_var(tokens[2]) == "string") {
+        } else if (type_of_var(tokens[2] + str) == "string") {
             std::cout << string_vars[tokens[2] + str].second;
         }
     } else if (has_first_and_last_double_quotes(tokens[2])) {
@@ -564,85 +383,6 @@ void Interpreter::cout(std::vector<std::string>& tokens, bool flag) {
     } else if (has_first_and_last_single_quotes(tokens[2])) {
         remove_single_quotes(tokens[2]);
         std::cout << tokens[2];
-    }
-}
-
-// str i declared variable, like str = 5; we are making str as 5
-void Interpreter::get_var_value_inside(std::string& str, bool flag) {
-    const std::string name = (flag == true) ? "inside_if" : "";
-    str += name;
-    if (type_of_var(str) == "char") {
-        str= std::to_string(char_vars[str].second);
-    } else if (type_of_var(str) == "int") {
-        str = std::to_string(integer_vars[str].second);
-    } else if (type_of_var(str) == "double") {
-        str = std::to_string(double_vars[str].second);
-    } else if (type_of_var(str) == "float") {
-        str = std::to_string(float_vars[str].second);
-    } else if (type_of_var(str) == "bool") {
-        str = std::to_string(bool_vars[str].second);
-    } else if (type_of_var(str) == "string") {
-        str = string_vars[str].second;
-    }
-}
-
-//type , op1, op2
-void Interpreter::check_vars(std::string& str1, std::string& str2, bool flag) {
-    if (is_declared_variable(str1) && is_declared_variable(str2)) { // case if op1 and op2 are already declared variables
-        
-        if (type_of_var(str1) == "string" && type_of_var(str2) != "string") { 
-            throw std::invalid_argument("The types are not muching for operation");
-        } else if (type_of_var(str1) != "string" && type_of_var(str2) == "string") {
-            throw std::invalid_argument("The types are not muching for operation");
-        }   
-
-        get_var_value_inside(str1, flag); //getting value inside var
-        get_var_value_inside(str2, flag); //getting value inside var
-
-        //std::cout << str1 << " " << str2;
-    } else if (is_declared_variable(str1) && !is_declared_variable(str2)) { // case that first op is declared var second is literal
-        // if one operand is string the other not it is not appropirate
-        if (has_first_and_last_double_quotes(str2) && type_of_var(str1) != "string") {
-            throw std::invalid_argument("The types are not muching for operation"); // 
-        } 
-
-        if (type_of_var(str1) == "string" && has_first_and_last_double_quotes(str2)) {
-            remove_double_quotes(str2);
-        } else if (has_first_and_last_single_quotes(str2)) {
-            remove_single_quotes(str2);
-        } 
-
-        get_var_value_inside(str1, flag); //getting value inside var
-        
-    } else if (!is_declared_variable(str1) && is_declared_variable(str2)) { // case that first op is literal second declared var
-        // if one operand is string the other not it is not appropirate
-        if (has_first_and_last_double_quotes(str1) && type_of_var(str2) != "string") {
-            throw std::invalid_argument("The types are not muching for operation"); // 
-        } 
-
-        if (type_of_var(str2) == "string" && has_first_and_last_double_quotes(str1)) {
-            remove_double_quotes(str1);
-        } else if (has_first_and_last_single_quotes(str1)) {
-            remove_single_quotes(str1);
-        } 
-
-        get_var_value_inside(str2, flag); //getting value inside var
-
-    } else if (!is_declared_variable(str1) && !is_declared_variable(str2)) { // if both operand1 and operand2 are literals
-        // if one operand is string the other not it is not appropirate
-        if (has_first_and_last_double_quotes(str1) && !has_first_and_last_double_quotes(str2)) {
-            throw std::invalid_argument("The types are not muching for operation"); // 
-        } else if (!has_first_and_last_double_quotes(str1) && has_first_and_last_double_quotes(str2)) {
-            throw std::invalid_argument("The types are not muching for operation"); // 
-        }  
-        
-        if (has_first_and_last_double_quotes(str1) && has_first_and_last_double_quotes(str2)) {
-            remove_double_quotes(str1);
-            remove_double_quotes(str2);
-        } else if (has_first_and_last_single_quotes(str1) && has_first_and_last_single_quotes(str2)) {
-            remove_single_quotes(str1);
-            remove_single_quotes(str2);
-        } 
     }
 }
 
@@ -669,6 +409,8 @@ void Interpreter::fill_with_garbage(const std::string& row0, const std::string& 
 } 
 
 void Interpreter::fill_var_with_given_value(const std::string& row0, std::string& row1, std::string& row3, const std::string& str) {
+    std::string tmp1 = row1;
+    std::string tmp2 = row3;
     row1 += str;
     if (str != "") {
         if_inside.push_back(row1);
@@ -680,6 +422,8 @@ void Interpreter::fill_var_with_given_value(const std::string& row0, std::string
         }
         std::pair<std::string, char> var{row0, convert_to_type<char>(row3)};
         char_vars[row1] = var;
+        row1 = tmp1;
+        return;
     } else if (row0 == "int") {
         std::pair<std::string, int> var{row0, convert_to_type<int>(row3)};
         integer_vars[row1] = var;
@@ -698,10 +442,15 @@ void Interpreter::fill_var_with_given_value(const std::string& row0, std::string
         }
         std::pair<std::string, std::string> var{row0, row3};
         string_vars[row1] = var;
+        row1 = tmp1;
+        return;
     }   
+    row1 = tmp1;
+    row3 = tmp2;
 }
 
 void Interpreter::fill_var_with_given_variable_value(const std::string& row0, std::string& row1, std::string& row2, const std::string& str) {
+    std::string tmp = row1;
     row1 += str;
     if (str != "") {
         if_inside.push_back(row1);
@@ -713,7 +462,7 @@ void Interpreter::fill_var_with_given_variable_value(const std::string& row0, st
         }
         std::pair<std::string, char> var;
         var.first = row0;
-        var.second = get_value_of_var_by_type<char>(row2, type_of_var(row2)); 
+        var.second = get_value_of_var_by_type<char>(type_of_var(row2), row2); 
         char_vars[row1] = var;
     } else if (row0 == "int") {
         std::pair<std::string, int> var;
@@ -742,133 +491,119 @@ void Interpreter::fill_var_with_given_variable_value(const std::string& row0, st
         std::pair<std::string, std::string> var(type_of_var(row2), row0);
         string_vars[row1] = var;
     }   
+    row1 = tmp;
 }
 
 
-void Interpreter::adding_cases(std::vector<std::string>& tokens, std::string& dest_var, int first, int second) {
-    if (type_of_var(dest_var) == "char") {
-        if (has_first_and_last_single_quotes(tokens[second])) {
-            remove_single_quotes(tokens[second]);
+void Interpreter::adding_cases(std::vector<std::string>& tokens, std::string& dest_var, std::string& str1, std::string& str2) {
+    std::string type = (tokens.size() == 6) ? tokens[0] : type_of_var(dest_var);
+    std::string tmp;
+
+    if (type == "char") {
+        
+        if (has_first_and_last_single_quotes(str2)) {
+            remove_single_quotes(str2);
         }
-        add<char>(tokens[0], tokens[first], tokens[second]);
-        char_vars[dest_var].second = convert_to_type<char>(tokens[0]);
-    } else if (type_of_var(dest_var) == "int") {
-        add<double>(tokens[0], tokens[first], tokens[second]);
-        integer_vars[dest_var].second = convert_to_type<int>(tokens[0]);
-    } else if (type_of_var(dest_var) == "double") {
-        add<double>(tokens[0], tokens[first], tokens[second]);
-        double_vars[dest_var].second  = convert_to_type<double>(tokens[0]);
-    } else if (type_of_var(dest_var)  == "float") {
-        add<float>(tokens[0], tokens[first], tokens[second]);
-        float_vars[dest_var].second = convert_to_type<float>(tokens[0]);
-    } else if (type_of_var(dest_var) == "bool") {
-        add<bool>(tokens[0], tokens[first], tokens[second]);
-        bool_vars[dest_var].second = convert_to_type<bool>(tokens[0]);
-    } else if (type_of_var(dest_var) == "string") {
-        if (has_first_and_last_double_quotes(tokens[second])) {
-            remove_double_quotes(tokens[second]);
-        }
-        add<std::string>(tokens[0], tokens[first], tokens[second]);
-        string_vars[dest_var].second = tokens[0];
-    }   
+        add<char>(tmp, str1, str2);
+        char_vars[dest_var].second = convert_to_type<char>(tmp);
+    } else if (type == "int") {
+        add<double>(tmp, str1, str2);
+        integer_vars[dest_var].second = convert_to_type<int>(tmp);
+        // std::cout << dest_var << "))" << integer_vars[dest_var].second;
+    } else if (type == "double") {
+        add<double>(tmp, str1, str2);
+        double_vars[dest_var].second  = convert_to_type<double>(tmp);
+    } else if (type == "float") {
+        add<float>(tmp, str1, str2);
+        float_vars[dest_var].second = convert_to_type<float>(tmp);
+    } else if (type == "bool") {
+        add<bool>(tmp, str1, str2);
+        bool_vars[dest_var].second = convert_to_type<bool>(tmp);
+    } else if (type == "string") {
+        if (has_first_and_last_double_quotes(str2)) {
+            remove_double_quotes(str2);
+        } 
+        add<std::string>(tmp, str1, str2);
+        string_vars[dest_var].second = tmp;
+    } 
 }
 
-void Interpreter::sub_cases(std::vector<std::string>& tokens, std::string& dest_var, int first, int second) {
-    if (type_of_var(dest_var) == "char") {
-        if (has_first_and_last_single_quotes(tokens[second])) {
-            remove_single_quotes(tokens[second]);
+void Interpreter::sub_cases(std::vector<std::string>& tokens, std::string& dest_var, std::string& str1, std::string& str2) {
+    std::string type = (tokens.size() == 6) ? tokens[0] : type_of_var(dest_var);
+    std::string tmp;
+    if (type == "char") {
+        if (has_first_and_last_single_quotes(str2)) {
+            remove_single_quotes(str2);
         }
-        sub<char>(tokens[0], tokens[first], tokens[second]);
-        char_vars[dest_var].second = convert_to_type<char>(tokens[0]);
-    } else if (type_of_var(dest_var) == "int") {
-        sub<double>(tokens[0], tokens[first], tokens[second]); // for correct casting while there are different types like int x = y(int) - z(double)
-        integer_vars[dest_var].second = convert_to_type<int>(tokens[0]);
-    } else if (type_of_var(dest_var) == "double") {
-        sub<double>(tokens[0], tokens[first], tokens[second]);
-        double_vars[dest_var].second  = convert_to_type<double>(tokens[0]);
-    } else if (type_of_var(dest_var)  == "float") {
-        sub<float>(tokens[0], tokens[first], tokens[second]);
-        float_vars[dest_var].second = convert_to_type<float>(tokens[0]);
-    } else if (type_of_var(dest_var) == "bool") {
-        sub<bool>(tokens[0], tokens[first], tokens[second]);
-        float_vars[dest_var].second = convert_to_type<bool>(tokens[0]);
-    } else if (type_of_var(dest_var) == "string") {
+        sub<char>(tmp, str1, str2);
+        char_vars[dest_var].second = convert_to_type<char>(tmp);
+    } else if (type == "int") {
+        sub<double>(tmp, str1, str2); // for correct casting while there are different types like int x = y(int) - z(double)
+        integer_vars[dest_var].second = convert_to_type<int>(tmp);
+    } else if (type == "double") {
+        sub<double>(tmp, str1, str2);
+        double_vars[dest_var].second  = convert_to_type<double>(tmp);
+    } else if (type == "float") {
+        sub<float>(tmp, str1, str2);
+        float_vars[dest_var].second = convert_to_type<float>(tmp);
+    } else if (type == "bool") {
+        sub<bool>(tmp, str1, str2);
+        float_vars[dest_var].second = convert_to_type<bool>(tmp);
+    } else if (type == "string") {
         throw std::runtime_error("Subtraction not supported for the string.");
     } 
 }
 
-void Interpreter::mul_cases(std::vector<std::string>& tokens, std::string& dest_var, int first, int second) {
-    if (type_of_var(dest_var) == "char") {
-        if (has_first_and_last_single_quotes(tokens[second])) {
-            remove_single_quotes(tokens[second]);
+void Interpreter::mul_cases(std::vector<std::string>& tokens, std::string& dest_var, std::string& str1, std::string& str2) {
+    std::string type = (tokens.size() == 6) ? tokens[0] : type_of_var(dest_var);
+    std::string tmp;
+    if (type == "char") {
+        if (has_first_and_last_single_quotes(str2)) {
+            remove_single_quotes(str2);
         }
-        multiply<char>(tokens[0], tokens[first], tokens[second]);
-        char_vars[dest_var].second = convert_to_type<char>(tokens[0]);
-    } else if (type_of_var(dest_var) == "int") {
-        multiply<double>(tokens[0], tokens[first], tokens[second]); // for correct casting while there are different types like int x = y(int) - z(double)
-        integer_vars[dest_var].second = convert_to_type<int>(tokens[0]);
-    } else if (type_of_var(dest_var) == "double") {
-        multiply<double>(tokens[0], tokens[first], tokens[second]);
-        double_vars[dest_var].second  = convert_to_type<double>(tokens[0]);
-    } else if (type_of_var(dest_var)  == "float") {
-        multiply<float>(tokens[0], tokens[first], tokens[second]);
-        float_vars[dest_var].second = convert_to_type<float>(tokens[0]);
-    } else if (type_of_var(dest_var) == "bool") {
-        multiply<bool>(tokens[0], tokens[first], tokens[second]);
-        float_vars[dest_var].second = convert_to_type<bool>(tokens[0]);
-    } else if (type_of_var(dest_var) == "string") {
+        multiply<char>(tmp, str1, str2);
+        char_vars[dest_var].second = convert_to_type<char>(tmp);
+    } else if (type == "int") {
+        multiply<double>(tmp, str1, str2); // for correct casting while there are different types like int x = y(int) - z(double)
+        integer_vars[dest_var].second = convert_to_type<int>(tmp);
+    } else if (type == "double") {
+        multiply<double>(tmp, str1, str2);
+        double_vars[dest_var].second  = convert_to_type<double>(tmp);
+    } else if (type == "float") {
+        multiply<float>(tmp, str1, str2);
+        float_vars[dest_var].second = convert_to_type<float>(tmp);
+    } else if (type == "bool") {
+        multiply<bool>(tmp, str1, str2);
+        float_vars[dest_var].second = convert_to_type<bool>(tmp);
+    } else if (type == "string") {
         throw std::runtime_error("Multiplication not supported for the string.");
-    } 
+    }
 }
 
-void Interpreter::div_cases(std::vector<std::string>& tokens, std::string& dest_var, int first, int second) {
-    if (type_of_var(dest_var) == "char") {
-        if (has_first_and_last_single_quotes(tokens[second])) {
-            remove_single_quotes(tokens[second]);
+void Interpreter::div_cases(std::vector<std::string>& tokens, std::string& dest_var, std::string& str1, std::string& str2) {
+    std::string type = (tokens.size() == 6) ? tokens[0] : type_of_var(dest_var);
+    std::string tmp;
+    if (type == "char") {
+       if (has_first_and_last_single_quotes(str2)) {
+            remove_single_quotes(str2);
         }
-        divide<char>(tokens[0], tokens[first], tokens[second]);
-        char_vars[dest_var].second = convert_to_type<char>(tokens[0]);
-    } else if (type_of_var(dest_var) == "int") {
-        divide<double>(tokens[0], tokens[first], tokens[second]); // for correct casting while there are different types like int x = y(int) - z(double)
-        integer_vars[dest_var].second = convert_to_type<int>(tokens[0]);
-    } else if (type_of_var(dest_var) == "double") {
-        divide<double>(tokens[0], tokens[first], tokens[second]);
-        double_vars[dest_var].second  = convert_to_type<double>(tokens[0]);
-    } else if (type_of_var(dest_var)  == "float") {
-        divide<float>(tokens[0], tokens[first], tokens[second]);
-        float_vars[dest_var].second = convert_to_type<float>(tokens[0]);
-    } else if (type_of_var(dest_var) == "bool") {
-        divide<bool>(tokens[0], tokens[first], tokens[second]);
-        float_vars[dest_var].second = convert_to_type<bool>(tokens[0]);
-    } else if (type_of_var(dest_var) == "string") {
+        divide<char>(tmp, str1, str2);
+        char_vars[dest_var].second = convert_to_type<char>(tmp);
+    } else if (type == "int") {
+        divide<double>(tmp, str1, str2); // for correct casting while there are different types like int x = y(int) - z(double)
+        integer_vars[dest_var].second = convert_to_type<int>(tmp);
+    } else if (type == "double") {
+        divide<double>(tmp, str1, str2);
+        double_vars[dest_var].second  = convert_to_type<double>(tmp);
+    } else if (type  == "float") {
+        divide<float>(tmp, str1, str2);
+        float_vars[dest_var].second = convert_to_type<float>(tmp);
+    } else if (type == "bool") {
+        divide<bool>(tmp, str1, str2);
+        float_vars[dest_var].second = convert_to_type<bool>(tmp);
+    } else if (type == "string") {
         throw std::runtime_error("Division not supported for the string.");
     }
-}
-
-bool Interpreter::is_single_char(const std::string& str) {
-    return str.length() == 1;
-}
-
-std::string Interpreter::type_of_var(const std::string& token) {
-    if (char_vars.find(token) != char_vars.end()) {
-        return "char";
-    }
-    else if (integer_vars.find(token) != integer_vars.end()) {
-        return "int";
-    }
-    else if (float_vars.find(token) != float_vars.end()) {
-        return "float";
-    }
-    else if (double_vars.find(token) != double_vars.end()) {
-        return "double";
-    }
-    else if (bool_vars.find(token) != bool_vars.end()) {
-        return "bool";
-    }
-    else if (string_vars.find(token) != string_vars.end()) {
-        return "string";
-    }
-    return "";
 }
 
 template <typename T>
@@ -885,65 +620,8 @@ T Interpreter::get_value_of_var_by_type(const std::string& type, const std::stri
         return get_value_of_bool(var);
     } else if (type == "string") {
     } 
-}
+    std::cout << var;
 
-char Interpreter::get_value_of_char(const std::string& token) {
-    for (auto it = char_vars.begin(); it != char_vars.end(); ++it) {
-        if (it -> first == token) {
-            return it -> second.second;
-        }
-    }
-}
-
-int Interpreter::get_value_of_int(const std::string& token) {
-    for (auto it = integer_vars.begin(); it != integer_vars.end(); ++it) {
-        if (it -> first == token) {
-            return it -> second.second;
-        }
-    }
-}
-
-double Interpreter::get_value_of_double(const std::string& token) {
-    for (auto it = double_vars.begin(); it != double_vars.end(); ++it) {
-        if (it -> first == token) {
-            return it -> second.second;
-        }
-    }
-}
-
-float Interpreter::get_value_of_float(const std::string& token) {
-    for (auto it = float_vars.begin(); it != float_vars.end(); ++it) {
-        if (it -> first == token) {
-            return it -> second.second;
-        }
-    }
-}
-
-bool Interpreter::get_value_of_bool(const std::string& token) {
-    for (auto it = bool_vars.begin(); it != bool_vars.end(); ++it) {
-        if (it -> first == token) {
-            return it -> second.second;
-        }
-    }
-}
-
-std::string Interpreter::get_value_of_string(const std::string& token) {
-    for (auto it = string_vars.begin(); it != string_vars.end(); ++it) {
-        if (it -> first == token) {
-            return it -> second.second;
-        }
-    }
-}
-
-void Interpreter::check_redefinition(const std::string& str) {
-    try {
-        if (is_declared_variable(str)) {
-            throw std::runtime_error("Redefinition of variable");
-        }
-    } catch (const std::exception& e) {
-        std::cerr << "Exception caught: " << e.what() << std::endl;
-    }
-    
 }
 
 template <typename T>
@@ -986,51 +664,6 @@ void Interpreter::divide(std::string& res, std::string& op1, std::string& op2) {
     res = ss.str();
 }
 
-void Interpreter::is_valid_parentheses(std::stack<char>& st, char str) {
-    if (!st.empty()) {
-        if (st.top() == '{' && str == '}') {
-            st.pop();
-        } else if (st.top() == '(' && str == ')') {
-            st.pop(); 
-        } else if (st.top() == '[' && str == ']') {
-            st.pop();
-        } else {
-            st.push(str);
-        }
-    } else {
-        st.push(str);
-    }
-}
-
-bool Interpreter::brace_exist(const std::vector<std::string>& vec) {
-    for (const std::string& str : vec) {
-        size_t open_brace1 = str.find("{");
-        size_t close_brace1 = str.find("}");
-        size_t open_brace2 = str.find("(");
-        size_t close_brace2 = str.find(")");
-        size_t open_brace3 = str.find("[");
-        size_t close_brace3 = str.find("]");
-
-        if (open_brace1 != std::string::npos || close_brace1 != std::string::npos || open_brace2 != std::string::npos || close_brace2 != std::string::npos || open_brace3 != std::string::npos || close_brace3 != std::string::npos) {
-            return true;  // Return true if either "{" or "}" is found
-        }
-    }
-    return false;
-}
-
-std::string Interpreter::find_brace(const std::vector<std::string>& vec) {
-    std::string found_braces;
-
-    for (const std::string& str : vec) {
-        for (char ch : str) {
-            if (ch == '{' || ch == '}' || ch == '(' || ch == ')' || ch == '[' || ch == ']') {
-                found_braces += ch;
-            }
-        }
-    }
-
-    return found_braces;
-}
 
 
 
