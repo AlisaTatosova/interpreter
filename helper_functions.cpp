@@ -197,6 +197,52 @@ bool Interpreter::find_open_close_brace(const std::string& str, char brace) {
     return false;
 }
 
+bool Interpreter::start_with_plus_plus(const std::string& str) {
+    return str.substr(0, 2) == "++";
+}
+
+// Function to check if a string ends with "++"
+bool Interpreter::end_with_plus_plus(const std::string& str) {
+    return str.size() >= 2 && str.substr(str.size() - 2, 2) == "++";
+}
+
+bool Interpreter::start_with_minus_minus(const std::string& str) {
+    return str.substr(0, 2) == "--";
+}
+
+// Function to check if a string ends with "++"
+bool Interpreter::end_with_minus_minus(const std::string& str) {
+    return str.size() >= 2 && str.substr(str.size() - 2, 2) == "--";
+}
+
+// Function to extract substrings containing "++" at the beginning or end
+std::string Interpreter::extract_minus_minus(const std::string& input) {
+    std::string result = input;;
+    std::string plus_plus = "--";
+    size_t pos = 0;
+
+    while ((pos = result.find(plus_plus)) != std::string::npos) {
+        if (pos == 0 || pos == result.size() - 2) {
+            result.erase(pos, 2);
+        }
+    }
+    return result;
+}
+
+// Function to extract substrings containing "++" at the beginning or end
+std::string Interpreter::extract_plus_plus(const std::string& input) {
+    std::string result = input;;
+    std::string plus_plus = "++";
+    size_t pos = 0;
+
+    while ((pos = result.find(plus_plus)) != std::string::npos) {
+        if (pos == 0 || pos == result.size() - 2) {
+            result.erase(pos, 2);
+        }
+    }
+    return result;
+}
+
 std::string Interpreter::remove_quotes_preserve_whitespace(const std::string& input) {
     std::string output;
     bool inside_quotes = false;

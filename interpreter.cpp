@@ -78,33 +78,27 @@ std::string Interpreter::convert_to_type<std::string>(std::string& str) {
     return str;  // Just return the input string for std::string
 }
 
-void Interpreter::parse(std::ifstream& file, int i) {
+void Interpreter::parse(std::ifstream& file) {
     if (!file.is_open()) {
         std::cerr << "Unable to open the file." << std::endl;
         return;
     }
 
-    int eip = 0; // instruction ptr
-    bool main_exists = false;
-    bool header_file_exists = false;
+    int eip = 0;
     std::stack<char> st;
 
-    std::stack<bool> inside_if_stack;
-    bool do_not_enter_if_statment = false;
-
-    bool inside_while = false;
-    bool do_not_enter_while = false;
+    std::stack<int> inside_if_stack;
+    std::stack<int> inside_while_stack;
 
     std::string line;
     while (std::getline(file, line)) { // Read the file line by line
         std::istringstream iss(line);
         std::vector<std::string> tokens;
         std::string token;
-
+        
         while (iss >> token) { // Split the line into words by spaces
             tokens.push_back(token);
         }
-
 
         if (tokens.empty()) { // if line is empty
             continue;
@@ -117,6 +111,61 @@ void Interpreter::parse(std::ifstream& file, int i) {
                 is_valid_parentheses(st, brace);
             }
         }
+
+        
+        if (tokens[0] == "if" && brace_exist(tokens)) { // handling if statment  
+            std::cout << "push ";
+            for_scopes[tokens[0] + std::to_string(eip)].first = eip;
+            inside_if_stack.push(eip); 
+        } else if (tokens[0] == "}" && !inside_if_stack.empty()) { 
+            std::cout << "pop " << inside_if_stack.size() << " ";
+            for_scopes["if" + std::to_string(inside_if_stack.top())].second = eip;
+            inside_if_stack.pop(); // Pop the stack when exiting an "if" block
+        } else if (tokens[0] == "while" && brace_exist(tokens)) { // handling if statment 
+            std::cout << "push_While"; 
+            for_scopes[tokens[0] + std::to_string(eip)].first = eip;
+            inside_while_stack.push(eip); 
+        } else if (tokens[0] == "}" && !inside_while_stack.empty()) { 
+            for_scopes["while" + std::to_string(inside_while_stack.top())].second = eip;
+            inside_while_stack.pop(); // Pop the stack when exiting an "if" block
+        } 
+
+        rows[eip] = tokens;
+        // std::cout << eip << " ";
+        //     for (int i = 0; i < rows[eip].size(); ++i) {
+        //         std::cout << rows[eip][i] << " "; 
+        //     }
+        // std::cout << std::endl;
+        ++eip;
+    }
+
+    for (auto it = for_scopes.begin(); it != for_scopes.end(); ++it) {
+        std::cout<< it -> first << " " << it -> second.first << " " <<  it -> second.second;
+         std::cout << std::endl;
+    }
+   
+
+    if (!st.empty()) {
+        std::cout << "There is problem with braces" << std::endl;
+        return;
+    }
+
+    file.close(); // Close the file when done
+}
+
+
+void Interpreter::execute(int i) {
+    int eip = 0; // instruction ptr
+    bool main_exists = false;
+    bool header_file_exists = false;
+    bool do_not_enter_if_statment = false;
+    bool enter_while = false;
+    int while_eip = 0;
+    
+    auto it = rows.find(i);
+    while (it != rows.end()) {
+        std::vector<std::string> tokens = it -> second;
+        ++it;
 
         // checking existence of <iostream> header file
         if (!header_file_exists) {
@@ -143,27 +192,6 @@ void Interpreter::parse(std::ifstream& file, int i) {
         // removing ; s from code
         remove_semicolons(tokens);
 
-        // std::string tmp;
-        // bool flag = false;
-        // for (int i = 0; i < tokens.size(); ++i) {
-        //     if (find_open_close_brace(tokens[i], '{')) {
-        //         for_scopes[tokens[0]].first = eip;
-        //         tmp = tokens[0];
-        //         flag = true;
-        //     } else if (find_open_close_brace(tokens[i], '}')) {
-        //         for_scopes[tmp].second = eip;
-        //         flag = true;
-        //     }
-        // }
-
-        // if (flag) {
-        //     continue;
-        // }
-
-        // it is for jmping if statment body if statment is not true
-        if (do_not_enter_if_statment && !find_open_close_brace(tokens[0], '}')) {
-            continue;
-        }
 
         // is variable declaration parsing
         if (tokens[0] == "char" || tokens[0] == "int" || tokens[0] == "double" || tokens[0] == "float" || tokens[0] == "bool" || tokens[0] == "string") {
@@ -172,40 +200,70 @@ void Interpreter::parse(std::ifstream& file, int i) {
             first_token_is_variable_parse(tokens);
         } else if (tokens[0] == "std::cout" && tokens[1] == "<<" && tokens.size() == 3 || tokens.size() == 5) {
             cout(tokens);
-        } 
+        } else if (tokens.size() == 1) {
+            if (start_with_plus_plus(tokens[0]) || end_with_plus_plus(tokens[0])) {
+                std::string without_plus_plus = extract_plus_plus(tokens[0]);
+                if (is_declared_variable(without_plus_plus)) {
+                    std::string tmp = without_plus_plus;
+                    std::pair<std::string, std::string> pair = check_variables_inside(without_plus_plus, std::to_string(1)); // checking types of op1 and op2 before some operation and make op1 and op2 as values inside them like op1 = x, op2 = y, after this function op1 = (value inside x), op2 = (value inside y)
+                    adding_cases(tokens, tmp, pair.first, pair.second);
+                } else {
+                    std::cout << "error: variable " << without_plus_plus << " is not declared" << std::endl;
+                    return;
+                }
+            } else if (start_with_minus_minus(tokens[0]) || end_with_minus_minus(tokens[0])) {
+                std::string without_minus_minus = extract_minus_minus(tokens[0]);
+                if (is_declared_variable(without_minus_minus)) {
+                    std::string tmp = without_minus_minus;
+                    std::pair<std::string, std::string> pair = check_variables_inside(without_minus_minus, std::to_string(1)); // checking types of op1 and op2 before some operation and make op1 and op2 as values inside them like op1 = x, op2 = y, after this function op1 = (value inside x), op2 = (value inside y)
+                    sub_cases(tokens, tmp, pair.first, pair.second);
+                } else {
+                    std::cout << "error: variable " << without_minus_minus << " is not declared" << std::endl;
+                    return;
+                }
+            } 
+        }
         
         
-        else if (tokens[0] == "if" && brace_exist(tokens)) { // handling if statment
+        if (tokens[0] == "if" && brace_exist(tokens)) { // handling if statment
             parse_if_statement(tokens, do_not_enter_if_statment);
             if (do_not_enter_if_statment) {
-                inside_if_stack.push(false); // Push false when entering an "if" block with do_not_enter flag
+                std::advance(it, for_scopes["if" + std::to_string(eip)].second - for_scopes["if" + std::to_string(eip)].first);
+                //std::cout << eip << " " << "if" + std::to_string(eip) << " " << for_scopes["if" + std::to_string(eip)].first << " " <<  for_scopes["if" + std::to_string(eip)].second << " " << for_scopes["if" + std::to_string(eip)].second - for_scopes["if" + std::to_string(eip)].first  ;
+                //std::cout << " ";
+                eip = for_scopes["if" + std::to_string(eip)].second;
+                do_not_enter_if_statment = false;
+            } 
+        } else if (tokens[0] == "while" && brace_exist(tokens)) { // handling if statment
+            while_eip = for_scopes["while" + std::to_string(eip)].second; // while_eip the start of while
+            enter_while = parse_while(tokens);
+            
+            if (!enter_while) {
+                std::cout << "yy " << enter_while;
+                std::advance(it, for_scopes["while" + std::to_string(eip)].second - for_scopes["while" + std::to_string(eip)].first);
+                eip = for_scopes["while" + std::to_string(eip)].second;
             } else {
-                inside_if_stack.push(true); // Push true when entering an "if" block
+                enter_while = true;
             }
+        } 
 
-        } else if (tokens[0] == "}" && !inside_if_stack.empty()) {
-            inside_if_stack.pop(); // Pop the stack when exiting an "if" block
-            do_not_enter_if_statment = false;
+        if (enter_while && eip == while_eip) {
+            while_eip = for_scopes["while" + std::to_string(eip)].second;
+            enter_while = parse_while(tokens);
+            if (!enter_while) {
+                std::advance(it, for_scopes["while" + std::to_string(eip)].second - for_scopes["while" + std::to_string(eip)].first);
+                eip = for_scopes["while" + std::to_string(eip)].second;
+            } 
         }
-         
-        
+
         // else if (!is_declared_variable(tokens[0])) { // cheack if variable is declared
         //     if ((tokens.size() == 3 && tokens[1] == "=") || (tokens.size() == 5  && tokens[1] == "=" && (tokens[3] == "+" || tokens[3] == "-" || tokens[3] == "*" || tokens[3] == "/")) || (tokens.size() == 3 && (tokens[1] == "+=" || tokens[1] == "-=" || tokens[1] == "*=" || tokens[1] == "/="))) {
         //        std::cout << "Variable " << tokens[0] << " is not declared" << std::endl;
         //     } 
         // } 
         //std::cout << std::endl;
-        
-        rows[eip] = tokens;
         ++eip;
     }
-
-    if (!st.empty()) {
-        std::cout << "There is problem with braces" << std::endl;
-        return;
-    }
-
-    file.close(); // Close the file when done
 }
 
 template <typename T>

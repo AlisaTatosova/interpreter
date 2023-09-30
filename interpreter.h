@@ -11,11 +11,13 @@
 #include <iostream>
 #include <vector>
 #include <stack>
+#include <queue>
 
 class Interpreter {
 public:
     Interpreter();
-    void parse(std::ifstream& file, int i); // parsing file line by line
+    void parse(std::ifstream& file);
+    void execute(int i); // parsing file line by line
     std::pair<std::string, std::string> check_variables_inside(const std::string& str1, const std::string& str2); // checking given variables are already declared variables or literals
     bool parse_header_file(std::vector<std::string>& tokens, int& eip, bool& header_file_exists);
     bool parse_main(std::vector<std::string>& tokens, int& eip, bool& main_exists);
@@ -105,9 +107,21 @@ private:
 
     void first_token_is_variable_parse(std::vector<std::string>& tokens);
     void parse_if_statement(std::vector<std::string>& tokens, bool& if_enter_flag);
-    void parse_while(std::vector<std::string>& tokens, bool& while_flag, bool& while_enter_flag);
+    bool parse_while(std::vector<std::string>& tokens);
     std::string remove_quotes_preserve_whitespace(const std::string& input);
     bool find_open_close_brace(const std::string& str, char brace);
+
+    void detect_if_and_while(std::ifstream& file);
+    bool start_with_plus_plus(const std::string& str);
+    bool end_with_plus_plus(const std::string& str);
+    std::string extract_plus_plus(const std::string& input);
+    bool start_with_minus_minus(const std::string& str);
+
+    // Function to check if a string ends with "++"
+    bool end_with_minus_minus(const std::string& str);
+
+    // Function to extract substrings containing "++" at the beginning or end
+    std::string extract_minus_minus(const std::string& input);
 };
 
 #endif
