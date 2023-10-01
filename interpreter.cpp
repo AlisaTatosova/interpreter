@@ -17,7 +17,6 @@ char Interpreter::convert_to_type(std::string& str) {
 
 template <>
 int Interpreter::convert_to_type(std::string& str) {
-    
     if (has_first_and_last_double_quotes(str)) {
         remove_double_quotes(str);
     } else if (has_first_and_last_single_quotes(str)) {
@@ -40,13 +39,13 @@ double Interpreter::convert_to_type(std::string& str) {
     if (has_first_and_last_single_quotes(str)) {
         remove_single_quotes(str);
     }
+
     if (str.size() == 1 && !is_number(str)) {
         // If the string is a single character, convert it to its ASCII value as a double
         return static_cast<double>(str[0]);
     } else if (is_number(str)) {
         return std::stod(str);
-    } 
-    else {
+    } else {
         // Conversion failed, and it's not a single character
         throw std::invalid_argument("Invalid input for conversion to double.");
     }
@@ -68,7 +67,7 @@ bool Interpreter::convert_to_type(std::string& str) {
         return false;
     } else if (str == "true" || str == "1" || is_number(str) || is_single_char(str)) {
         return true;
-    }else {
+    } else {
         throw std::invalid_argument("Invalid argument: Cannot convert to bool.");
     }
 }
@@ -86,7 +85,6 @@ void Interpreter::parse(std::ifstream& file) {
 
     int eip = 0;
     std::stack<char> st;
-
     std::stack<int> inside_if_stack;
     std::stack<int> inside_while_stack;
 
@@ -96,8 +94,29 @@ void Interpreter::parse(std::ifstream& file) {
         std::vector<std::string> tokens;
         std::string token;
         
-        while (iss >> token) { // Split the line into words by spaces
-            tokens.push_back(token);
+        // while (iss >> token) { // Split the line into words by spaces
+        //     tokens.push_back(token);
+        // }
+        bool inside_quotes = false;
+        std::string current_token;
+
+        while (iss >> token) {
+            // as we reading from sstream when we saw string with space as "hello world" we read it space by space but we have to read it as one sting so here this case is handled
+            if (token.front() == '"' && (token.back() == '"' || token[token.size() - 2] == '"')) {
+                // Entire quoted string is a single token, including the quotes.
+                tokens.push_back(token);
+            } else if (token.front() == '"' ) {
+                inside_quotes = true;
+                current_token = token;
+            } else if (token.back() == '"' || token[token.size() - 2] == '"') {
+                inside_quotes = false;
+                current_token += " " + token;
+                tokens.push_back(current_token);
+            } else if (inside_quotes) {
+                current_token += " " + token;
+            } else {
+                tokens.push_back(token);
+            }
         }
 
         if (tokens.empty()) { // if line is empty
@@ -112,7 +131,6 @@ void Interpreter::parse(std::ifstream& file) {
             }
         }
 
-        
         if (tokens[0] == "if" && brace_exist(tokens)) { // handling if statment  
             std::cout << "push ";
             for_scopes[tokens[0] + std::to_string(eip)].first = eip;
@@ -139,12 +157,11 @@ void Interpreter::parse(std::ifstream& file) {
         ++eip;
     }
 
-    for (auto it = for_scopes.begin(); it != for_scopes.end(); ++it) {
-        std::cout<< it -> first << " " << it -> second.first << " " <<  it -> second.second;
-         std::cout << std::endl;
-    }
+    // for (auto it = for_scopes.begin(); it != for_scopes.end(); ++it) {
+    //     std::cout<< it -> first << " " << it -> second.first << " " <<  it -> second.second;
+    //      std::cout << std::endl;
+    // }
    
-
     if (!st.empty()) {
         std::cout << "There is problem with braces" << std::endl;
         return;
@@ -160,7 +177,8 @@ void Interpreter::execute(int i) {
     bool header_file_exists = false;
     bool do_not_enter_if_statment = false;
     bool enter_while = false;
-    int while_eip = 0;
+    int while_eip_end = 0;
+    int while_eip_start = 0;
     
     auto it = rows.find(i);
     while (it != rows.end()) {
@@ -193,38 +211,6 @@ void Interpreter::execute(int i) {
         remove_semicolons(tokens);
 
 
-        // is variable declaration parsing
-        if (tokens[0] == "char" || tokens[0] == "int" || tokens[0] == "double" || tokens[0] == "float" || tokens[0] == "bool" || tokens[0] == "string") {
-            zero_token_is_type_parse(tokens); // token[0] is type // gaving flags to not take as redefinition declaration of same name variable in if statment
-        } else if (is_declared_variable(tokens[0])) { // parse exprression where first token is variable
-            first_token_is_variable_parse(tokens);
-        } else if (tokens[0] == "std::cout" && tokens[1] == "<<" && tokens.size() == 3 || tokens.size() == 5) {
-            cout(tokens);
-        } else if (tokens.size() == 1) {
-            if (start_with_plus_plus(tokens[0]) || end_with_plus_plus(tokens[0])) {
-                std::string without_plus_plus = extract_plus_plus(tokens[0]);
-                if (is_declared_variable(without_plus_plus)) {
-                    std::string tmp = without_plus_plus;
-                    std::pair<std::string, std::string> pair = check_variables_inside(without_plus_plus, std::to_string(1)); // checking types of op1 and op2 before some operation and make op1 and op2 as values inside them like op1 = x, op2 = y, after this function op1 = (value inside x), op2 = (value inside y)
-                    adding_cases(tokens, tmp, pair.first, pair.second);
-                } else {
-                    std::cout << "error: variable " << without_plus_plus << " is not declared" << std::endl;
-                    return;
-                }
-            } else if (start_with_minus_minus(tokens[0]) || end_with_minus_minus(tokens[0])) {
-                std::string without_minus_minus = extract_minus_minus(tokens[0]);
-                if (is_declared_variable(without_minus_minus)) {
-                    std::string tmp = without_minus_minus;
-                    std::pair<std::string, std::string> pair = check_variables_inside(without_minus_minus, std::to_string(1)); // checking types of op1 and op2 before some operation and make op1 and op2 as values inside them like op1 = x, op2 = y, after this function op1 = (value inside x), op2 = (value inside y)
-                    sub_cases(tokens, tmp, pair.first, pair.second);
-                } else {
-                    std::cout << "error: variable " << without_minus_minus << " is not declared" << std::endl;
-                    return;
-                }
-            } 
-        }
-        
-        
         if (tokens[0] == "if" && brace_exist(tokens)) { // handling if statment
             parse_if_statement(tokens, do_not_enter_if_statment);
             if (do_not_enter_if_statment) {
@@ -235,32 +221,45 @@ void Interpreter::execute(int i) {
                 do_not_enter_if_statment = false;
             } 
         } else if (tokens[0] == "while" && brace_exist(tokens)) { // handling if statment
-            while_eip = for_scopes["while" + std::to_string(eip)].second; // while_eip the start of while
-            enter_while = parse_while(tokens);
-            
-            if (!enter_while) {
-                std::cout << "yy " << enter_while;
-                std::advance(it, for_scopes["while" + std::to_string(eip)].second - for_scopes["while" + std::to_string(eip)].first);
-                eip = for_scopes["while" + std::to_string(eip)].second;
-            } else {
-                enter_while = true;
-            }
-        } 
+            while_eip_start = for_scopes["while" + std::to_string(eip)].first;
+            while_eip_end = for_scopes["while" + std::to_string(eip)].second; // while_eip_end the start of while
 
-        if (enter_while && eip == while_eip) {
-            while_eip = for_scopes["while" + std::to_string(eip)].second;
             enter_while = parse_while(tokens);
             if (!enter_while) {
                 std::advance(it, for_scopes["while" + std::to_string(eip)].second - for_scopes["while" + std::to_string(eip)].first);
                 eip = for_scopes["while" + std::to_string(eip)].second;
             } 
-        }
+        } else if (tokens[0] == "char" || tokens[0] == "int" || tokens[0] == "double" || tokens[0] == "float" || tokens[0] == "bool" || tokens[0] == "string") {  // is variable declaration parsing          
+            zero_token_is_type_parse(tokens); // token[0] is type // gaving flags to not take as redefinition declaration of same name variable in if statment
+        } else if (is_declared_variable(tokens[0])) { // parse exprression where first token is variable
+            first_token_is_variable_parse(tokens);
+        } else if (tokens[0] == "std::cout" && tokens[1] == "<<" && (tokens.size() == 3 || tokens.size() == 5)) {
+            cout(tokens);
+        } else if ((tokens.size() == 1 && start_with_plus_plus(tokens[0]) || end_with_plus_plus(tokens[0])) || (start_with_minus_minus(tokens[0]) || end_with_minus_minus(tokens[0]))) {
+            increment_decrement_parse(tokens);
+        } else if (is_number(tokens[0])) {
+            throw std::runtime_error("Error: Literal " + tokens[0] + " can not be an l-value");
+        } 
 
-        // else if (!is_declared_variable(tokens[0])) { // cheack if variable is declared
-        //     if ((tokens.size() == 3 && tokens[1] == "=") || (tokens.size() == 5  && tokens[1] == "=" && (tokens[3] == "+" || tokens[3] == "-" || tokens[3] == "*" || tokens[3] == "/")) || (tokens.size() == 3 && (tokens[1] == "+=" || tokens[1] == "-=" || tokens[1] == "*=" || tokens[1] == "/="))) {
-        //        std::cout << "Variable " << tokens[0] << " is not declared" << std::endl;
-        //     } 
-        // } 
+        else if (tokens[0] != "}" && !is_declared_variable(tokens[0])) { 
+            throw std::runtime_error("Error: use of undeclared identifier " + tokens[0]);
+        } 
+    
+        // std::cout << "enter while " << enter_while << " && " << " eip " << eip << " while_eip_end " << while_eip_end << std::endl;  
+        if (enter_while && eip == while_eip_end) {
+            // std::cout << "enter while is true " << std::endl;
+            // std::cout << while_eip_end << std::endl;
+            // std::cout << for_scopes["while" + std::to_string(eip)].second - for_scopes["while" + std::to_string(while_eip_end)].first;
+            int tmp = while_eip_end - while_eip_start + 1;
+            std::advance(it, -tmp);
+            // for (int i = 0; i < it -> second.size(); ++i) {
+            //     std::cout << it -> second[i] << " "; 
+            // }
+            eip = while_eip_start - 1;
+            // std::cout << "tmp " << tmp << " eip " << eip;
+            // std::cout << std::endl;
+        }  
+
         //std::cout << std::endl;
         ++eip;
     }
@@ -289,7 +288,6 @@ bool Interpreter::is_declared_variable(const std::string& token) {
 }
 
 void Interpreter::cout(std::vector<std::string>& tokens) {
-    
     if (is_number(tokens[2])) {
         std::cout << tokens[2];
     } else if (is_declared_variable(tokens[2])) {
@@ -313,6 +311,8 @@ void Interpreter::cout(std::vector<std::string>& tokens) {
         remove_single_quotes(tokens[2]);
         std::cout << tokens[2];
         
+    } else if (tokens.size() == 3 && tokens[2] == "std::endl") {
+        std::cout << std::endl;
     } else {
         //std::cout << "Given variable " << tokens[2] << " is not declared" << std::endl;
     }
@@ -417,12 +417,11 @@ void Interpreter::fill_var_with_given_variable_value(const std::string& row0, co
     }   
 }
 
-void Interpreter::adding_cases(std::vector<std::string>& tokens, const std::string& dest_var, std::string& str1, std::string& str2) {
+void Interpreter::adding_cases(const std::vector<std::string>& tokens, const std::string& dest_var, std::string& str1, std::string& str2) {
     std::string type = (tokens.size() == 6) ? tokens[0] : type_of_var(dest_var);
     std::string tmp;
 
     if (type == "char") {
-        
         if (has_first_and_last_single_quotes(str2)) {
             remove_single_quotes(str2);
         }
@@ -431,7 +430,6 @@ void Interpreter::adding_cases(std::vector<std::string>& tokens, const std::stri
     } else if (type == "int") {
         add<double>(tmp, str1, str2);
         integer_vars[dest_var].second = convert_to_type<int>(tmp);
-        // std::cout << dest_var << "))" << integer_vars[dest_var].second;
     } else if (type == "double") {
         add<double>(tmp, str1, str2);
         double_vars[dest_var].second  = convert_to_type<double>(tmp);
@@ -450,7 +448,7 @@ void Interpreter::adding_cases(std::vector<std::string>& tokens, const std::stri
     } 
 }
 
-void Interpreter::sub_cases(std::vector<std::string>& tokens, std::string& dest_var, std::string& str1, std::string& str2) {
+void Interpreter::sub_cases(const std::vector<std::string>& tokens, std::string& dest_var, std::string& str1, std::string& str2) {
     std::string type = (tokens.size() == 6) ? tokens[0] : type_of_var(dest_var);
     std::string tmp;
     if (type == "char") {
@@ -476,7 +474,7 @@ void Interpreter::sub_cases(std::vector<std::string>& tokens, std::string& dest_
     } 
 }
 
-void Interpreter::mul_cases(std::vector<std::string>& tokens, std::string& dest_var, std::string& str1, std::string& str2) {
+void Interpreter::mul_cases(const std::vector<std::string>& tokens, std::string& dest_var, std::string& str1, std::string& str2) {
     std::string type = (tokens.size() == 6) ? tokens[0] : type_of_var(dest_var);
     std::string tmp;
     if (type == "char") {
@@ -502,7 +500,7 @@ void Interpreter::mul_cases(std::vector<std::string>& tokens, std::string& dest_
     }
 }
 
-void Interpreter::div_cases(std::vector<std::string>& tokens, std::string& dest_var, std::string& str1, std::string& str2) {
+void Interpreter::div_cases(const std::vector<std::string>& tokens, std::string& dest_var, std::string& str1, std::string& str2) {
     std::string type = (tokens.size() == 6) ? tokens[0] : type_of_var(dest_var);
     std::string tmp;
     if (type == "char") {

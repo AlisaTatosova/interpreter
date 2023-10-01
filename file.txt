@@ -1,11 +1,14 @@
 #include <iostream>
 
 int main() {
+  char o = 88;
+  std::cout << o << std::endl;
   int a = 90;
-  int b = 31;
+  int b = 31 ;
   int c = a + b;
   a += b;
-  b--;
+  a--;
+
   std::cout << a << std::endl;
   std::cout << b << std::endl;
   b *= c;
@@ -17,10 +20,11 @@ int main() {
   if (d == 0) {
     std::cout << "hello"  << std::endl;
   }
-  string e = "world";
+  string e = "world hello";
   e += "k";
   std::cout << e  << std::endl;
-  if (e == "worldk") {
+  d = 80;
+  if (e == "world hellok") {
       d = 80;
       std::cout << "so" << std::endl;
       if (d == 80) {
@@ -32,10 +36,26 @@ int main() {
       }
   }
 
+  while (d > 72) {
+    if (d > 75) {
+      std::cout << d << std::endl;
+    }
+    --d;
+  }
+
+  string x = "i" + "so" ;
+  int u = d + 16;
+
+  if (x == "iso") {
+    std::cout << "oooo" << std::endl;
+  }
+
+  std::cout << a << std::endl;
+  std::cout << x << std::endl;
   std::cout << d << std::endl;
 
   bool r = 1;
-  std::cout << r;
+  std::cout << r << std::endl;
   double k = 12 + 14.4;
-  std::cout << k;
+  std::cout << k << std::endl;
 }

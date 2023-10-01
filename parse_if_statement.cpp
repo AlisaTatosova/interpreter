@@ -2,11 +2,19 @@
 
 void Interpreter::parse_if_statement(std::vector<std::string>& tokens, bool& if_enter_flag) {
     if (find_brace(tokens).size() > 3) {
-        std::cout << "extraneous brace" << std::endl;
-        return;
-    } if (find_brace(tokens).size() < 3) {
-        std::cout << "missing brace" << std::endl;
-        return;
+        throw std::runtime_error("Error: extraneous brace in if statment");
+    } else if (find_brace(tokens).size() < 3) {
+        throw std::runtime_error("Error: missing brace in if statment");
+    }
+
+    if (!check_open_parent(tokens[1])) {
+        size_t pos = tokens[1].find('(');
+        throw std::runtime_error("Error: use of undeclared identifier " + tokens[1].substr(0, pos) + " in if statment");
+    }
+
+    if (!check_close_parent(tokens[3])) {
+        size_t pos = tokens[3].find(')');
+        throw std::runtime_error("Error: use of undeclared identifier " + tokens[3].substr(pos + 1) + " in if statment");
     }
 
     // extracting ( ) s from if statement now we have for example if x != y {
@@ -44,5 +52,7 @@ void Interpreter::parse_if_statement(std::vector<std::string>& tokens, bool& if_
         if (pair.first > pair.second) { // do not enter if
             if_enter_flag = true;
         }
+    } else {
+        throw std::runtime_error("Error: " + tokens[2]  + " in if statment is not appropriate for comparison");
     }
 }

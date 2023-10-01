@@ -243,21 +243,6 @@ std::string Interpreter::extract_plus_plus(const std::string& input) {
     return result;
 }
 
-std::string Interpreter::remove_quotes_preserve_whitespace(const std::string& input) {
-    std::string output;
-    bool inside_quotes = false;
-
-    for (char c : input) {
-        if (c == '\'') {
-            inside_quotes = !inside_quotes; 
-        } else if (inside_quotes) {
-            output += c;
-        }
-    }
-
-    return output;
-}
-
 void Interpreter::check_redefinition(const std::string& str) {
     try {
         if (is_declared_variable(str)) {
@@ -267,6 +252,20 @@ void Interpreter::check_redefinition(const std::string& str) {
         std::cerr << "Exception caught: " << e.what() << std::endl;
     }
     
+}
+
+bool Interpreter::check_open_parent(const std::string& str) {
+    if (str.front() == '(') {
+        return true;
+    }
+    return false;
+}
+
+bool Interpreter::check_close_parent(const std::string& str) {
+    if (str.back() == ')') {
+        return true;
+    }
+    return false;
 }
 
 bool Interpreter::is_single_char(const std::string& str) {

@@ -9,10 +9,11 @@ bool Interpreter::parse_main(std::vector<std::string>& tokens, int& eip, bool& m
             rows[eip] = tokens;
             ++eip;
         } else if (concat == "intmain()") {
-            //std::cout << "There is no opening scope '{' for main function" << std::endl;
-        } else {
-            std::cout << "There is no main function to start program" << std::endl;
+            throw std::runtime_error("There is no opening scope '{' for main function");
+        } else if (concat != "intmain()" && tokens[1] != "intmain") {
+            throw std::runtime_error("There is no main function to start program");
         }
-    }
+    } 
+
     return main_exists;
 }
