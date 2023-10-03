@@ -14,6 +14,5 @@ bool Interpreter::parse_main(std::vector<std::string>& tokens, int& eip, bool& m
             throw std::runtime_error("There is no main function to start program");
         }
     } 
-
     return main_exists;
 }

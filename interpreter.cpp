@@ -94,9 +94,6 @@ void Interpreter::parse(std::ifstream& file) {
         std::vector<std::string> tokens;
         std::string token;
         
-        // while (iss >> token) { // Split the line into words by spaces
-        //     tokens.push_back(token);
-        // }
         bool inside_quotes = false;
         std::string current_token;
 
@@ -132,15 +129,15 @@ void Interpreter::parse(std::ifstream& file) {
         }
 
         if (tokens[0] == "if" && brace_exist(tokens)) { // handling if statment  
-            std::cout << "push ";
+           // std::cout << "push ";
             for_scopes[tokens[0] + std::to_string(eip)].first = eip;
             inside_if_stack.push(eip); 
         } else if (tokens[0] == "}" && !inside_if_stack.empty()) { 
-            std::cout << "pop " << inside_if_stack.size() << " ";
+           // std::cout << "pop " << inside_if_stack.size() << " ";
             for_scopes["if" + std::to_string(inside_if_stack.top())].second = eip;
             inside_if_stack.pop(); // Pop the stack when exiting an "if" block
         } else if (tokens[0] == "while" && brace_exist(tokens)) { // handling if statment 
-            std::cout << "push_While"; 
+           // std::cout << "push_While"; 
             for_scopes[tokens[0] + std::to_string(eip)].first = eip;
             inside_while_stack.push(eip); 
         } else if (tokens[0] == "}" && !inside_while_stack.empty()) { 
@@ -175,7 +172,7 @@ void Interpreter::execute(int i) {
     int eip = 0; // instruction ptr
     bool main_exists = false;
     bool header_file_exists = false;
-    bool do_not_enter_if_statment = false;
+    bool enter_if_statment = false;
     bool enter_while = false;
     int while_eip_end = 0;
     int while_eip_start = 0;
@@ -212,13 +209,10 @@ void Interpreter::execute(int i) {
 
 
         if (tokens[0] == "if" && brace_exist(tokens)) { // handling if statment
-            parse_if_statement(tokens, do_not_enter_if_statment);
-            if (do_not_enter_if_statment) {
+            enter_if_statment =  parse_if_statement(tokens);
+            if (!enter_if_statment) {
                 std::advance(it, for_scopes["if" + std::to_string(eip)].second - for_scopes["if" + std::to_string(eip)].first);
-                //std::cout << eip << " " << "if" + std::to_string(eip) << " " << for_scopes["if" + std::to_string(eip)].first << " " <<  for_scopes["if" + std::to_string(eip)].second << " " << for_scopes["if" + std::to_string(eip)].second - for_scopes["if" + std::to_string(eip)].first  ;
-                //std::cout << " ";
                 eip = for_scopes["if" + std::to_string(eip)].second;
-                do_not_enter_if_statment = false;
             } 
         } else if (tokens[0] == "while" && brace_exist(tokens)) { // handling if statment
             while_eip_start = for_scopes["while" + std::to_string(eip)].first;
@@ -231,21 +225,33 @@ void Interpreter::execute(int i) {
             } 
         } else if (tokens[0] == "char" || tokens[0] == "int" || tokens[0] == "double" || tokens[0] == "float" || tokens[0] == "bool" || tokens[0] == "string") {  // is variable declaration parsing          
             zero_token_is_type_parse(tokens); // token[0] is type // gaving flags to not take as redefinition declaration of same name variable in if statment
-        } else if (is_declared_variable(tokens[0])) { // parse exprression where first token is variable
+        } else if (is_declared_variable(tokens[0]) || is_declared_array(separate_name_and_size_in_array_declaration(tokens[0]).first)) { // parse exprression where first token is variable
             first_token_is_variable_parse(tokens);
         } else if (tokens[0] == "std::cout" && tokens[1] == "<<" && (tokens.size() == 3 || tokens.size() == 5)) {
             cout(tokens);
+        } else if (tokens[0] == "std::cin" && tokens[1] == ">>" && tokens.size() == 3) {
+            cin(tokens);
         } else if ((tokens.size() == 1 && start_with_plus_plus(tokens[0]) || end_with_plus_plus(tokens[0])) || (start_with_minus_minus(tokens[0]) || end_with_minus_minus(tokens[0]))) {
             increment_decrement_parse(tokens);
+        } else if (enter_if_statment && !enter_while && tokens[0] == "continue") { // handling case that continue is not in loop statement
+            throw std::runtime_error("Error: 'continue' statement is not in loop statement");
+        } else  if (enter_if_statment && !enter_while && tokens[0] == "break") { // handling case that break is not in loop statement
+            throw std::runtime_error("Error: 'break' statement is not in loop statement");
+        } else if (tokens[0] == "break" && enter_if_statment && enter_while) { // handling case that continue is in loop statement
+            std::advance(it, while_eip_end - eip);
+            eip = while_eip_end;
+            enter_while = false;
+        } else if (tokens[0] == "continue" && enter_if_statment && enter_while) { // handling case that continue is in loop statement
+            int tmp = eip - while_eip_start + 1;
+            std::advance(it, -tmp);
+            eip = while_eip_start - 1;
         } else if (is_number(tokens[0])) {
             throw std::runtime_error("Error: Literal " + tokens[0] + " can not be an l-value");
-        } 
-
-        else if (tokens[0] != "}" && !is_declared_variable(tokens[0])) { 
+        } else if (tokens[0] != "}" && !is_declared_variable(tokens[0])) { 
             throw std::runtime_error("Error: use of undeclared identifier " + tokens[0]);
         } 
     
-        // std::cout << "enter while " << enter_while << " && " << " eip " << eip << " while_eip_end " << while_eip_end << std::endl;  
+        
         if (enter_while && eip == while_eip_end) {
             // std::cout << "enter while is true " << std::endl;
             // std::cout << while_eip_end << std::endl;
@@ -258,9 +264,8 @@ void Interpreter::execute(int i) {
             eip = while_eip_start - 1;
             // std::cout << "tmp " << tmp << " eip " << eip;
             // std::cout << std::endl;
-        }  
+        }
 
-        //std::cout << std::endl;
         ++eip;
     }
 }
@@ -287,6 +292,84 @@ bool Interpreter::is_declared_variable(const std::string& token) {
            is_declared_variable(token, string_vars);
 }
 
+template<typename T>
+bool Interpreter::is_declared_array(const std::string& token, const std::map<std::string, std::vector<T>>& arr) {
+    return arr.find(token) != arr.end();
+}
+
+bool Interpreter::is_declared_array(const std::string& token) {
+    return is_declared_variable(token, char_arr) ||
+           is_declared_variable(token, int_arr) ||
+           is_declared_variable(token, float_arr) ||
+           is_declared_variable(token, double_arr) ||
+           is_declared_variable(token, bool_arr);
+}
+
+void Interpreter::cin(std::vector<std::string>& tokens) {
+    if (is_number(tokens[2])) {
+        throw std::invalid_argument("Error: invalid operands to binary expression ('std::istream' (aka 'basic_istream<char>') and 'int')");
+    } else if (is_declared_variable(tokens[2])) {
+        if (type_of_var(tokens[2]) == "char") {
+            char var;
+            std::cin >> var;
+            char_vars[tokens[2]].second = var;
+        } else if (type_of_var(tokens[2]) == "int") {
+            int var;
+            std::cin >> var;
+            integer_vars[tokens[2]].second = var;
+        } else if (type_of_var(tokens[2]) == "double") {
+            double var;
+            std::cin >> var;
+            double_vars[tokens[2]].second = var;
+        } else if (type_of_var(tokens[2]) == "float") {
+            float var;
+            std::cin >> var;
+            float_vars[tokens[2]].second = var;
+        } else if (type_of_var(tokens[2]) == "bool") {
+            bool var;
+            std::cin >> var;
+            bool_vars[tokens[2]].second = var;
+        } else if (type_of_var(tokens[2]) == "string") {
+            std::string var;
+            std::cin >> var;
+            string_vars[tokens[2]].second = var;
+        }
+    } else if (is_declared_array(separate_name_and_size_in_array_declaration(tokens[2]).first)) { // for inputing array
+        std::pair<std::string, std::string> name_size =  separate_name_and_size_in_array_declaration(tokens[2]);
+        if (type_of_var(separate_name_and_size_in_array_declaration(tokens[2]).first) == "char") {
+            char var;
+            std::string name = name_size.first;
+            int size = convert_to_type<int>(name_size.second); // the elem to cin
+            std::cin >> var;
+            char_arr[name].second[size] = var;
+        } else if (type_of_var(separate_name_and_size_in_array_declaration(tokens[2]).first) == "int") {
+            int var;
+            std::string name = name_size.first;
+            int size = convert_to_type<int>(name_size.second); // the elem to cin
+            std::cin >> var;
+            int_arr[name].second[size] = var;
+        } else if (type_of_var(separate_name_and_size_in_array_declaration(tokens[2]).first) == "double") {
+            double var;
+            std::string name = name_size.first;
+            int size = convert_to_type<int>(name_size.second); // the elem to cin
+            std::cin >> var;
+            double_arr[name].second[size] = var;
+        } else if (type_of_var(separate_name_and_size_in_array_declaration(tokens[2]).first) == "float") {
+            float var;
+            std::string name = name_size.first;
+            int size = convert_to_type<int>(name_size.second); // the elem to cin
+            std::cin >> var;
+            float_arr[name].second[size] = var;
+        } else if (type_of_var(separate_name_and_size_in_array_declaration(tokens[2]).first) == "bool") {
+            bool var;
+            std::string name = name_size.first;
+            int size = convert_to_type<int>(name_size.second); // the elem to cin
+            std::cin >> var;
+            bool_arr[name].second[size] = var;
+        } 
+    }
+}
+
 void Interpreter::cout(std::vector<std::string>& tokens) {
     if (is_number(tokens[2])) {
         std::cout << tokens[2];
@@ -311,6 +394,44 @@ void Interpreter::cout(std::vector<std::string>& tokens) {
         remove_single_quotes(tokens[2]);
         std::cout << tokens[2];
         
+    } else if (is_declared_variable(separate_name_and_size_in_array_declaration(tokens[2]).first) && type_of_var(separate_name_and_size_in_array_declaration(tokens[2]).first) == "string") { // cout << str[i]
+        std::pair<std::string, std::string> name_size =  separate_name_and_size_in_array_declaration(tokens[2]);
+        std::string name = name_size.first;
+        int size = convert_to_type<int>(name_size.second);
+        std::cout << string_vars[name].second[size];
+    } else if (tokens[2].find('[') && tokens[2].find(']')) {
+        std::pair<std::string, std::string> name_size = separate_name_and_size_in_array_declaration(tokens[2]);
+        if (type_of_var(name_size.first) == "char") {
+            if (convert_to_type<int>(name_size.second) < (char_arr[name_size.first].second).size()) {
+                std::cout << (char_arr[name_size.first].second)[convert_to_type<int>(name_size.second)];   
+            } else {
+                throw std::runtime_error("Warning: out of range print in array!");
+            }
+        } else if (type_of_var(name_size.first) == "int") {
+            if (convert_to_type<int>(name_size.second) < (int_arr[name_size.first].second).size()) {
+                std::cout << (int_arr[name_size.first].second)[convert_to_type<int>(name_size.second)];
+            } else {
+                throw std::runtime_error("Warning: out of range print in array!");
+            }
+        } else if (type_of_var(name_size.first) == "float") {
+            if (convert_to_type<int>(name_size.second) < (float_arr[name_size.first].second).size()) {
+                std::cout << (float_arr[name_size.first].second)[convert_to_type<int>(name_size.second)];
+            } else {
+                throw std::runtime_error("Warning: out of range print in array!");
+            }
+        } else if (type_of_var(name_size.first) == "double") {
+            if (convert_to_type<int>(name_size.second) < (double_arr[name_size.first].second).size()) {
+               std::cout << (double_arr[name_size.first].second)[convert_to_type<int>(name_size.second)];
+            } else {
+                throw std::runtime_error("Warning: out of range print in array!");
+            }
+        } else if (type_of_var(name_size.first) == "bool") {
+            if (convert_to_type<int>(name_size.second) < (bool_arr[name_size.first].second).size()) {
+               std::cout << (bool_arr[name_size.first].second)[convert_to_type<int>(name_size.second)];
+            } else {
+                throw std::runtime_error("Warning: out of range print in array!");
+            }
+        } 
     } else if (tokens.size() == 3 && tokens[2] == "std::endl") {
         std::cout << std::endl;
     } else {

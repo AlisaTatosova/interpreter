@@ -24,109 +24,108 @@ bool Interpreter::parse_while(std::vector<std::string>& tokens) {
     extract_paren(tokens[3], ')');
 
     std::pair<std::string, std::string> pair = check_variables_inside(tokens[1], tokens[3]);
-    
     //checking condition
     if (tokens[2] == "==") {
-        if (pair.first != pair.second) { // do not enter if
+        if (pair.first != pair.second) { // do not enter while
             while_enter_flag = false;
         }
     } else if (tokens[2] == "!=") {
-        if (is_number(tokens[1]) || is_number(tokens[3])) {
+        if (is_number(pair.first) || is_number(pair.second)) {
             double first = convert_to_type<double>(pair.first);
             double second = convert_to_type<double>(pair.second);
-            if (first == second) { // do not enter if
+            if (first == second) { // do not enter while
                 while_enter_flag = false; 
             }     
-        } else if (has_first_and_last_double_quotes(tokens[1]) && has_first_and_last_double_quotes(tokens[3])) {
+        } else if (has_first_and_last_double_quotes(pair.first) && has_first_and_last_double_quotes(pair.second)) {
             std::string first = convert_to_type<std::string>(pair.first);
             std::string second = convert_to_type<std::string>(pair.second);
-            if (first == second) { // do not enter if
+            if (first == second) { // do not enter while
                 while_enter_flag = false; 
             }  
-        } else if (has_first_and_last_single_quotes(tokens[1]) && has_first_and_last_single_quotes(tokens[3])) {
+        } else if (has_first_and_last_single_quotes(pair.first) && has_first_and_last_single_quotes(pair.second)) {
             char first = convert_to_type<char>(pair.first);
             char second = convert_to_type<char>(pair.second);
-            if (first == second) { // do not enter if
+            if (first == second) { // do not enter while
                 while_enter_flag = false; 
             }  
         }  
     } else if (tokens[2] == ">") {
-        if (is_number(tokens[1]) || is_number(tokens[3])) {
+        if (is_number(pair.first) || is_number(pair.second)) {
             double first = convert_to_type<double>(pair.first);
             double second = convert_to_type<double>(pair.second);
-            if (first <= second) { // do not enter if
+            if (first <= second) { // do not enter while
                 while_enter_flag = false;
             }
-        } else if (has_first_and_last_double_quotes(tokens[1]) && has_first_and_last_double_quotes(tokens[3])) {
+        } else if (has_first_and_last_double_quotes(pair.first) && has_first_and_last_double_quotes(pair.second)) {
             std::string first = convert_to_type<std::string>(pair.first);
             std::string second = convert_to_type<std::string>(pair.second);
-            if (first <= second) { // do not enter if
+            if (first <= second) { // do not enter while
                 while_enter_flag = false;
             }
-        } else if (has_first_and_last_single_quotes(tokens[1]) && has_first_and_last_single_quotes(tokens[3])) {
+        } else if (has_first_and_last_single_quotes(pair.first) && has_first_and_last_single_quotes(pair.second)) {
             char first = convert_to_type<char>(pair.first);
             char second = convert_to_type<char>(pair.second);
-            if (first <= second) { // do not enter if
+            if (first <= second) { // do not enter while
                 while_enter_flag = false;
             } 
         }  
     } else if (tokens[2] == ">=") {
-        if (is_number(tokens[1]) || is_number(tokens[3])) {
+        if (is_number(pair.first) || is_number(pair.second)) {
             double first = convert_to_type<double>(pair.first);
             double second = convert_to_type<double>(pair.second);
-            if (first < second) { // do not enter if
+            if (first < second) { // do not enter while
                 while_enter_flag = false;
             }
-        } else if (has_first_and_last_double_quotes(tokens[1]) && has_first_and_last_double_quotes(tokens[3])) {
+        } else if (has_first_and_last_double_quotes(pair.first) && has_first_and_last_double_quotes(pair.second)) {
             std::string first = convert_to_type<std::string>(pair.first);
             std::string second = convert_to_type<std::string>(pair.second);
-            if (first < second) { // do not enter if
+            if (first < second) { // do not enter while
                 while_enter_flag = false;
             }
-        } else if (has_first_and_last_single_quotes(tokens[1]) && has_first_and_last_single_quotes(tokens[3])) {
+        } else if (has_first_and_last_single_quotes(pair.first) && has_first_and_last_single_quotes(pair.second)) {
             char first = convert_to_type<char>(pair.first);
             char second = convert_to_type<char>(pair.second);
-            if (first < second) { // do not enter if
+            if (first < second) { // do not enter while
                 while_enter_flag = false;
             }
         }  
     } else if (tokens[2] == "<") {
-        if (is_number(tokens[1]) || is_number(tokens[3])) {
+        if (is_number(pair.first) || is_number(pair.second)) {
             double first = convert_to_type<double>(pair.first);
             double second = convert_to_type<double>(pair.second);
-            if (first >= second) { // do not enter if
+            if (first >= second) { // do not enter while
                 while_enter_flag = false;
             }
-        } else if (has_first_and_last_double_quotes(tokens[1]) && has_first_and_last_double_quotes(tokens[3])) {
+        } else if (has_first_and_last_double_quotes(pair.first) && has_first_and_last_double_quotes(pair.second)) {
             std::string first = convert_to_type<std::string>(pair.first);
             std::string second = convert_to_type<std::string>(pair.second);
-            if (first >= second) { // do not enter if
+            if (first >= second) { // do not enter while
                 while_enter_flag = false;
             }
-        } else if (has_first_and_last_single_quotes(tokens[1]) && has_first_and_last_single_quotes(tokens[3])) {
+        } else if (has_first_and_last_single_quotes(pair.first) && has_first_and_last_single_quotes(pair.second)) {
             char first = convert_to_type<char>(pair.first);
             char second = convert_to_type<char>(pair.second);
-            if (first >= second) { // do not enter if
+            if (first >= second) { // do not enter while
                 while_enter_flag = false;
             }
         }  
     } else if (tokens[2] == "<=") {
-        if (is_number(tokens[1]) || is_number(tokens[3])) {
+        if (is_number(pair.first) || is_number(pair.second)) {
             double first = convert_to_type<double>(pair.first);
             double second = convert_to_type<double>(pair.second);
-            if (first > second) { // do not enter if
+            if (first > second) { // do not enter while
                 while_enter_flag = false;
             }
-        } else if (has_first_and_last_double_quotes(tokens[1]) && has_first_and_last_double_quotes(tokens[3])) {
+        } else if (has_first_and_last_double_quotes(pair.first) && has_first_and_last_double_quotes(pair.second)) {
             std::string first = convert_to_type<std::string>(pair.first);
             std::string second = convert_to_type<std::string>(pair.second);
-            if (first > second) { // do not enter if
+            if (first > second) { // do not enter while
                 while_enter_flag = false;
             }
-        } else if (has_first_and_last_single_quotes(tokens[1]) && has_first_and_last_single_quotes(tokens[3])) {
+        } else if (has_first_and_last_single_quotes(pair.first) && has_first_and_last_single_quotes(pair.second)) {
             char first = convert_to_type<char>(pair.first);
             char second = convert_to_type<char>(pair.second);
-            if (first > second) { // do not enter if
+            if (first > second) { // do not enter while
                 while_enter_flag = false;
             }
         }  

@@ -1,61 +1,45 @@
+
 #include <iostream>
 
 int main() {
-  char o = 88;
-  std::cout << o << std::endl;
-  int a = 90;
-  int b = 31 ;
-  int c = a + b;
-  a += b;
-  a--;
-
-  std::cout << a << std::endl;
-  std::cout << b << std::endl;
-  b *= c;
-  a = c  / 2;
-  std::cout << c << std::endl;
-  int d = 2;
-  d = a;
-  std::cout << d << std::endl;
-  if (d == 0) {
-    std::cout << "hello"  << std::endl;
-  }
-  string e = "world hello";
-  e += "k";
-  std::cout << e  << std::endl;
-  d = 80;
-  if (e == "world hellok") {
-      d = 80;
-      std::cout << "so" << std::endl;
-      if (d == 80) {
-        std::cout << "why" << std::endl;
-        if (c != 121) {
-          std::cout << "no" << std::endl;
-        }
-        std::cout << "yes"  << std::endl;
-      }
-  }
-
-  while (d > 72) {
-    if (d > 75) {
-      std::cout << d << std::endl;
+    int num = 10;
+    char ch = 'a';
+    bool flag = true; 
+    string str = "hello world";
+    int i = 0;
+    int j = 11;
+    while (i < j) {
+      std::cout << str[i];
+      ++i;
     }
-    --d;
-  }
+      
+    if (i == j) {
+      std::cout << "Yes";
+    }
 
-  string x = "i" + "so" ;
-  int u = d + 16;
+    int arr[5] = {1, 2, 3, 4, 5};
+    i = 0;
+    j  = 5;
+      
+    while (i < j) {
+      if (i == 4) {
+	      break;
+      }
+      std::cout << arr[i];
+      ++i; 
+    }
+      
+    char array[3];
+    i = 0;
+    j = 0;
+    while (i < j) {
+      std::cin >> array[i];
+      ++i;
+    }
+    num += 100;
+    num = num + 99;
+    if (num > 0) {
+	    std::cout << num << std::endl;
+    }
 
-  if (x == "iso") {
-    std::cout << "oooo" << std::endl;
-  }
-
-  std::cout << a << std::endl;
-  std::cout << x << std::endl;
-  std::cout << d << std::endl;
-
-  bool r = 1;
-  std::cout << r << std::endl;
-  double k = 12 + 14.4;
-  std::cout << k << std::endl;
-}
+} 

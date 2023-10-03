@@ -46,6 +46,31 @@ bool Interpreter::is_one_byte_integer(int num) {
     return false;
 }
 
+std::pair<std::string, std::string> Interpreter::separate_name_and_size_in_array_declaration(const std::string& str) {
+    size_t open = str.find('[');
+    size_t close = str.find(']');
+    std::string extract1;
+    std::string extract2;
+
+    if (open != std::string::npos && str.front() != '[' && close != std::string::npos && close > open) {
+        extract1 = str.substr(0, open);
+        if (is_number(extract1)) {
+            throw std::runtime_error("Error: the name of array can not be a number");
+        }
+        extract2 = str.substr(open + 1, close - open - 1);
+        if (is_declared_variable(extract2)) {
+            get_var_value_inside(extract2);
+        } else if (!is_declared_variable(extract2) && !is_number(extract2)) {
+            throw std::runtime_error("Error: the size of array must be const literal");
+        }
+    } 
+    // else {
+    //     throw std::runtime_error("Error: problem with brackets in array declaration");
+    // }
+
+    return {extract1, extract2}; // extract1 - name of arrray , extract2 - size
+}
+
 std::string Interpreter::extract_paren(std::string& input, char brace) {
     size_t pos = input.find(brace);  // Find the position of the first '('
     if (pos != std::string::npos) {  // Check if '(' was found
@@ -252,7 +277,7 @@ void Interpreter::check_redefinition(const std::string& str) {
         std::cerr << "Exception caught: " << e.what() << std::endl;
     }
     
-}
+} 
 
 bool Interpreter::check_open_parent(const std::string& str) {
     if (str.front() == '(') {
@@ -261,11 +286,46 @@ bool Interpreter::check_open_parent(const std::string& str) {
     return false;
 }
 
+
 bool Interpreter::check_close_parent(const std::string& str) {
     if (str.back() == ')') {
         return true;
     }
     return false;
+}
+
+bool Interpreter::check_open_figure_parent(const std::string& str) {
+    if (str.front() == '{') {
+        return true;
+    }
+    return false;
+}
+
+bool Interpreter::check_close_figure_parent(const std::string& str) {
+    if (str.back() == '}') {
+        return true;
+    }
+    return false;
+}
+
+std::string Interpreter::extract_figure_paren(const std::string& str, char brace) {
+    std::string extract;
+    if (brace == '{') {
+        extract = str.substr(1, str.size() - 1);
+    } else if (brace == '}') {
+        extract = str.substr(0, str.size() - 1);
+    }
+    return extract;
+}
+
+std::string Interpreter::remove_comma_at_the_end(const std::string& str) {
+    std::string res;
+    if (str.back() != ',') {
+        throw std::runtime_error("There is skipped comma in initializer list");
+    } else {
+        res = str.substr(0, str.size() - 1);
+    }
+    return res;
 }
 
 bool Interpreter::is_single_char(const std::string& str) {
@@ -290,6 +350,23 @@ std::string Interpreter::type_of_var(const std::string& token) {
     }
     else if (string_vars.find(token) != string_vars.end()) {
         return "string";
+    } 
+    
+    else if (char_arr.find(token) != char_arr.end()) {
+        return "char";
     }
+    else if (int_arr.find(token) != int_arr.end()) {
+        return "int";
+    }
+    else if (float_arr.find(token) != float_arr.end()) {
+        return "float";
+    }
+    else if (double_arr.find(token) != double_arr.end()) {
+        return "double";
+    }
+    else if (bool_arr.find(token) != bool_arr.end()) {
+        return "bool";
+    }
+   
     return "";
 }

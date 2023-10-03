@@ -16,12 +16,14 @@ public:
     Interpreter();
     void parse(std::ifstream& file);
     void execute(int i); // parsing file line by line
-    std::pair<std::string, std::string> check_variables_inside(const std::string& str1, const std::string& str2); // checking given variables are already declared variables or literals
+    
     bool parse_header_file(std::vector<std::string>& tokens, int& eip, bool& header_file_exists);
     bool parse_main(std::vector<std::string>& tokens, int& eip, bool& main_exists);
-    void parse_if_statement(std::vector<std::string>& tokens, bool& if_enter_flag);
+    bool parse_if_statement(std::vector<std::string>& tokens);
     bool parse_while(std::vector<std::string>& tokens);
     void increment_decrement_parse(const std::vector<std::string>& tokens);
+    void cout(std::vector<std::string>& tokens); //cout
+    void cin(std::vector<std::string>& tokens);
 
     template <typename T>
     void add(std::string& res, std::string& str1, std::string& str2);
@@ -45,11 +47,23 @@ private:
     std::map<std::string, std::pair<std::string, std::string>> string_vars;// saving string variables // key - variable name, value - variable value
     std::map<std::string, std::pair<int, int>> for_scopes;
 
+    std::map<std::string, std::pair<std::string, std::vector<char>>> char_arr;
+    std::map<std::string, std::pair<std::string, std::vector<int>>> int_arr;
+    std::map<std::string, std::pair<std::string, std::vector<float>>> float_arr;
+    std::map<std::string, std::pair<std::string, std::vector<double>>> double_arr;
+    std::map<std::string, std::pair<std::string, std::vector<bool>>> bool_arr;
+    std::map<std::string, std::pair<std::string, std::vector<std::string>>> string_arr;
+
 private:
     //helper functions
     template<typename T>
     bool is_declared_variable(const std::string& token, const std::map<std::string, T>& vars); // checking if variable is already declared
     bool is_declared_variable(const std::string& token);
+
+    template<typename T>
+    bool is_declared_array(const std::string& token, const std::map<std::string, std::vector<T>>& arr);
+    bool is_declared_array(const std::string& token);
+
     bool is_number(const std::string& str); // checking if given string is number
     bool is_single_char(const std::string& str); // checking if string is single character
     bool is_one_byte_integer(int num);
@@ -59,11 +73,16 @@ private:
     bool contains_semicolon(const std::string& str); // checking if given string contains semicolon ';'
     bool last_char_is_semicolon(std::string& str); // checking if last character of line is ';' semilcon
     void remove_semicolons(std::vector<std::string>& tokens); // remove semicolons
+    std::string extract_figure_paren(const std::string& str, char brace);
+    std::string remove_comma_at_the_end(const std::string& str);
 
     void check_redefinition(const std::string& str); // check variable redefinition
     bool check_existence_of_semicolons(std::vector<std::string>& tokens, int& eip); // checks existence of semicolons
     bool check_open_parent(const std::string& str);
     bool check_close_parent(const std::string& str); 
+    bool check_open_figure_parent(const std::string& str);
+    bool check_close_figure_parent(const std::string& str);
+    std::pair<std::string, std::string> check_variables_inside(const std::string& str1, const std::string& str2); // checking given variables are already declared variables or literals
 
     std::string concatenate_and_remove_spaces(const std::vector<std::string>& vector); // concat all strings in vector and remove spaces
     void remove_double_quotes(std::string& input); // removing double quotes ""
@@ -105,7 +124,6 @@ private:
 
     std::string find_key_by_value(std::map<std::string, int>& my_map, int target_value); // find key of map by value
     std::string type_of_var(const std::string& token); // detecting type of variable
-    void cout(std::vector<std::string>& tokens); //cout
 
     template <typename T>
     void delete_key_from_map(std::map<std::string, T>& map, const std::string& key); // deleting key from map after if statement to clear the declarations inside if statement
@@ -116,6 +134,8 @@ private:
     bool start_with_plus_plus(const std::string& str); 
     bool end_with_plus_plus(const std::string& str); // Function to check if a string ends with "++"
     bool end_with_minus_minus(const std::string& str);
+
+    std::pair<std::string, std::string>  separate_name_and_size_in_array_declaration(const std::string& str);
     
 };
 
