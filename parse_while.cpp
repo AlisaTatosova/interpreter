@@ -1,7 +1,7 @@
 #include "interpreter.h"
 
 bool Interpreter::parse_while(std::vector<std::string>& tokens) {
-    if (find_brace(tokens).size() > 3) {
+    if (find_brace(tokens).size() > 5) {
         throw std::runtime_error("Error: extraneous brace in while statment");
     } else if (find_brace(tokens).size() < 3) {
         throw std::runtime_error("Error: missing brace in while statment");
@@ -20,10 +20,11 @@ bool Interpreter::parse_while(std::vector<std::string>& tokens) {
     bool while_enter_flag = true;
 
     // extracting ( ) s from if statement now we have for example if x != y {
-    extract_paren(tokens[1], '('); 
-    extract_paren(tokens[3], ')');
+    std::string op1 = extract_paren(tokens[1], '('); 
+    std::string op2 = extract_paren(tokens[3], ')');
+  
+    std::pair<std::string, std::string> pair = check_variables_inside(op1, op2);
 
-    std::pair<std::string, std::string> pair = check_variables_inside(tokens[1], tokens[3]);
     //checking condition
     if (tokens[2] == "==") {
         if (pair.first != pair.second) { // do not enter while

@@ -15,6 +15,42 @@ std::pair<std::string, std::string> Interpreter::check_variables_inside(const st
         get_var_value_inside(tmp1); //getting value inside var
         get_var_value_inside(tmp2); //getting value inside var
         
+    } else if (is_declared_array(separate_name_and_size_in_array_declaration(str1).first) && is_declared_array(separate_name_and_size_in_array_declaration(str2).first)) {
+        tmp1 = get_value_inside_array_index(str1);
+        tmp2 = get_value_inside_array_index(str2);
+    } else if (is_declared_array(separate_name_and_size_in_array_declaration(str1).first) && !is_declared_array(separate_name_and_size_in_array_declaration(str2).first)) {
+        tmp1 = get_value_inside_array_index(str1);
+
+        if (!is_number(tmp2) && !has_first_and_last_double_quotes(tmp2) && !has_first_and_last_single_quotes(tmp2) && tmp2 != "false" && tmp2 != "true") {
+            throw std::runtime_error("Error: Variable " + tmp2 + " is not declared");
+        }
+        
+        // if one operand is string the other not it is not appropirate
+        if (has_first_and_last_double_quotes(str2) && type_of_var(str1) != "string") {
+            throw std::invalid_argument("The types are not muching for operation"); // 
+        } 
+
+        if (type_of_var(str1) == "string" && has_first_and_last_double_quotes(str2)) {
+            remove_double_quotes(tmp2);
+        } else if (has_first_and_last_single_quotes(str2)) {
+            remove_single_quotes(tmp2);
+        } 
+    } else if (!is_declared_array(separate_name_and_size_in_array_declaration(str1).first) && is_declared_array(separate_name_and_size_in_array_declaration(str2).first)) {
+        if (!is_number(tmp1) && !has_first_and_last_double_quotes(tmp1) && !has_first_and_last_single_quotes(tmp1) && tmp1 != "false" && tmp1 != "true") {
+            throw std::runtime_error("Error: Variable " + tmp1 + " is not declared");
+        }
+        // if one operand is string the other not it is not appropirate
+        if (has_first_and_last_double_quotes(str1) && type_of_var(str2) != "string") {
+            throw std::invalid_argument("The types are not muching for operation"); // 
+        } 
+
+        if (type_of_var(str2) == "string" && has_first_and_last_double_quotes(str1)) {
+            remove_double_quotes(tmp1);
+        } else if (has_first_and_last_single_quotes(str1)) {
+            remove_single_quotes(tmp1);
+        } 
+
+        tmp2 = get_value_inside_array_index(str2);
     } else if (is_declared_variable(str1) && !is_declared_variable(str2)) { // case that first op is declared var second is literal
         if (!is_number(tmp2) && !has_first_and_last_double_quotes(tmp2) && !has_first_and_last_single_quotes(tmp2) && tmp2 != "false" && tmp2 != "true") {
             throw std::runtime_error("Error: Variable " + tmp2 + " is not declared");

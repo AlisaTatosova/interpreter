@@ -64,18 +64,18 @@ std::pair<std::string, std::string> Interpreter::separate_name_and_size_in_array
             throw std::runtime_error("Error: the size of array must be const literal");
         }
     } 
-    // else {
-    //     throw std::runtime_error("Error: problem with brackets in array declaration");
-    // }
 
     return {extract1, extract2}; // extract1 - name of arrray , extract2 - size
 }
 
-std::string Interpreter::extract_paren(std::string& input, char brace) {
-    size_t pos = input.find(brace);  // Find the position of the first '('
-    if (pos != std::string::npos) {  // Check if '(' was found
-        input.erase(pos, 1);   // Extract the substring up to the first '('
+std::string Interpreter::extract_paren(const std::string& str, char brace) {
+    std::string extract;
+    if (brace == '(') {
+        extract = str.substr(1, str.size() - 1);
+    } else if (brace == ')') {
+        extract = str.substr(0, str.size() - 1);
     }
+    return extract;
 }
 
 bool Interpreter::last_char_is_semicolon(std::string& str) {
@@ -271,7 +271,7 @@ std::string Interpreter::extract_plus_plus(const std::string& input) {
 void Interpreter::check_redefinition(const std::string& str) {
     try {
         if (is_declared_variable(str)) {
-            throw std::runtime_error("Redefinition of variable");
+            throw std::runtime_error("Redefinition of variable ");
         }
     } catch (const std::exception& e) {
         std::cerr << "Exception caught: " << e.what() << std::endl;
@@ -330,6 +330,18 @@ std::string Interpreter::remove_comma_at_the_end(const std::string& str) {
 
 bool Interpreter::is_single_char(const std::string& str) {
     return str.length() == 1;
+}
+
+bool Interpreter::find_string_in_vector(const std::vector<std::string>& strings, const std::string& target) {
+    // Use std::find to search for the target string in the vector
+    auto it = std::find(strings.begin(), strings.end(), target);
+
+    // Check if the string was found
+    if (it != strings.end()) {
+        return true; // Found the string
+    } else {
+        return false; // String not found
+    }
 }
 
 std::string Interpreter::type_of_var(const std::string& token) {
