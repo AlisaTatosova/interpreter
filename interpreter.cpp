@@ -191,16 +191,12 @@ void Interpreter::parse(std::ifstream& file) {
             inside_while_stack.pop(); // Pop the stack when exiting an "if" block
         } 
 
-        
-
-        
-
         rows[eip] = tokens;
-        std::cout << eip << " ";
-            for (int i = 0; i < rows[eip].size(); ++i) {
-                std::cout << rows[eip][i] << " "; 
-            }
-        std::cout << std::endl;
+//       std::cout << eip << " ";
+//          for (int i = 0; i < rows[eip].size(); ++i) {
+//              std::cout << rows[eip][i] << " "; 
+//          }
+//        std::cout << std::endl;
         ++eip;
     }
    
