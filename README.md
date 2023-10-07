@@ -79,6 +79,7 @@ int main() {
         std::cout << numbers[j] << std::endl;
         j++;
     }
+    
 
     int sum = 0;
     int product = 1;
@@ -88,10 +89,14 @@ int main() {
         product *= numbers[counter];
         counter++;
     }
-
-    std::cout << "Sum of array elements:" << sum << std::endl;
-    std::cout << "Product of array elements:" << product << std::endl;
+    
+    std::cout << "Sum of array elements:";
+    std::cout << sum << std::endl;
+    std::cout << "Product of array elements:";
+    std::cout << product << std::endl;
+    
 }
+
 
 
 Interpreter is able to execute this program and display the sum and product of the array elements.
