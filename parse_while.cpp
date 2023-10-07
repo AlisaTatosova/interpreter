@@ -1,5 +1,6 @@
 #include "interpreter.h"
 
+//function for parsing the line where first token is while loop
 bool Interpreter::parse_while(std::vector<std::string>& tokens) {
     if (find_brace(tokens).size() > 5) {
         throw std::runtime_error("Error: extraneous brace in while statment");

@@ -1,5 +1,6 @@
 #include "interpreter.h"
 
+// parsing increment and decrement
 void Interpreter::increment_decrement_parse(const std::vector<std::string>& tokens) {
     if (tokens.size() == 1 && start_with_plus_plus(tokens[0]) || end_with_plus_plus(tokens[0])) {
         std::string without_plus_plus = extract_plus_plus(tokens[0]);

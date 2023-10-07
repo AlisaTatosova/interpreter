@@ -1,5 +1,6 @@
 #include "interpreter.h"
 
+//function for parsing the line where first token is type name
 void Interpreter::zero_token_is_type_parse(std::vector<std::string>& tokens) {
     if (is_number(tokens[1])) {
         throw std::runtime_error("Error: Variable name can not be a number: " + tokens[1]);

@@ -1,5 +1,6 @@
 #include "interpreter.h"
 
+//function for parsing the line where first token is if statement
 bool Interpreter::parse_if_statement(std::vector<std::string>& tokens) {
     if (find_brace(tokens).size() > 5) {
         throw std::runtime_error("Error: extraneous brace in if statment");

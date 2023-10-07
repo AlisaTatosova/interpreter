@@ -1,5 +1,6 @@
 #include "interpreter.h"
 
+// parsing cin
 void Interpreter::cin(std::vector<std::string>& tokens) {
     if (is_number(tokens[2])) { 
         throw std::invalid_argument("Error: invalid operands to binary expression ('std::istream' (aka 'basic_istream<char>') and 'int')");
@@ -67,6 +68,7 @@ void Interpreter::cin(std::vector<std::string>& tokens) {
     }
 }
 
+// parsing cout
 void Interpreter::cout(std::vector<std::string>& tokens) {
     if (is_number(tokens[2])) {
         std::cout << tokens[2];

@@ -4,6 +4,7 @@ Interpreter::Interpreter() {
     std::srand(static_cast<unsigned int>(std::time(nullptr)));
 }
 
+// converting to char
 template <>
 char Interpreter::convert_to_type(std::string& str) {
     if (is_single_char(str)) {
@@ -15,6 +16,7 @@ char Interpreter::convert_to_type(std::string& str) {
     }
 }
 
+// converting to int
 template <>
 int Interpreter::convert_to_type(std::string& str) {
     if (has_first_and_last_double_quotes(str)) {
@@ -34,6 +36,7 @@ int Interpreter::convert_to_type(std::string& str) {
     return std::stoi(str);
 }
 
+// converting to double
 template <>
 double Interpreter::convert_to_type(std::string& str) {
     if (has_first_and_last_single_quotes(str)) {
@@ -51,6 +54,7 @@ double Interpreter::convert_to_type(std::string& str) {
     }
 }
 
+// converting to float
 template <>
 float Interpreter::convert_to_type(std::string& str) {
     if (str == "false") {
@@ -61,6 +65,7 @@ float Interpreter::convert_to_type(std::string& str) {
     return std::stof(str);
 }
 
+// converting to bool
 template <>
 bool Interpreter::convert_to_type(std::string& str) {
     if (str == "false" || str == "0") {
@@ -72,11 +77,13 @@ bool Interpreter::convert_to_type(std::string& str) {
     }
 }
 
+// converting to string
 template <>
 std::string Interpreter::convert_to_type<std::string>(std::string& str) {
     return str;  // Just return the input string for std::string
 }
 
+// parsing 
 void Interpreter::parse(std::ifstream& file) {
     if (!file.is_open()) {
         std::cerr << "Unable to open the file." << std::endl;
@@ -102,7 +109,7 @@ void Interpreter::parse(std::ifstream& file) {
             if (token.front() == '"' && (token.back() == '"' || token[token.size() - 2] == '"')) {
                 // entire quoted string is a single token, including the quotes.
                 tokens.push_back(token);
-            } else if (token.front() == '"' ) {
+            } else if (token.front() == '"') {
                 inside_quotes = true;
                 current_token = token;
             } else if (token.back() == '"' || token[token.size() - 2] == '"') {
@@ -141,13 +148,11 @@ void Interpreter::parse(std::ifstream& file) {
                 tokens[2] += "if";
                 tokens[2] += std::to_string(inside_if_stack.top());
             }  else if (tokens[0] == "if") {
-            
                 std::string tmp = extract_paren(tokens[1], '(');
                 if (find_string_in_vector(ifs, tmp + "if" + std::to_string(inside_if_stack.top()))) {
                     tokens[1] += "if";
                     tokens[1] += std::to_string(inside_if_stack.top()); 
                 }
-
             }
         } 
 
@@ -160,17 +165,15 @@ void Interpreter::parse(std::ifstream& file) {
             } else if (find_string_in_vector(whiles, tokens[0] + "while" + std::to_string(inside_while_stack.top()))) {
                 tokens[0] += "while";
                 tokens[0] += std::to_string(inside_while_stack.top());
-            } else if ((tokens[0] == "std::cout" || tokens[0] == "std::cin") && find_string_in_vector(ifs, tokens[2] + "while" + std::to_string(inside_while_stack.top()))) {
+            } else if ((tokens[0] == "std::cout" || tokens[0] == "std::cin") && find_string_in_vector(whiles, tokens[2] + "while" + std::to_string(inside_while_stack.top()))) {
                 tokens[2] += "while";
                 tokens[2] += std::to_string(inside_while_stack.top());
             }  else if (tokens[0] == "while") {
-            
                 std::string tmp = extract_paren(tokens[1], '(');
                 if (find_string_in_vector(whiles, tmp + "while" + std::to_string(inside_while_stack.top()))) {
                     tokens[1] += "while";
                     tokens[1] += std::to_string(inside_while_stack.top()); 
                 }
-
             }
         } 
         
@@ -181,9 +184,7 @@ void Interpreter::parse(std::ifstream& file) {
         } else if (tokens[0] == "}" && !inside_if_stack.empty()) { 
             for_scopes["if" + std::to_string(inside_if_stack.top())].second = eip;
             inside_if_stack.pop(); // Pop the stack when exiting an "if" block
-        } 
-        
-        else if (tokens[0] == "while" && brace_exist(tokens)) { // handling if statment 
+        } else if (tokens[0] == "while" && brace_exist(tokens)) { // handling if statment 
             for_scopes[tokens[0] + std::to_string(eip)].first = eip;
             inside_while_stack.push(eip); 
         } else if (tokens[0] == "}" && !inside_while_stack.empty()) { 
@@ -192,11 +193,6 @@ void Interpreter::parse(std::ifstream& file) {
         } 
 
         rows[eip] = tokens;
-//       std::cout << eip << " ";
-//          for (int i = 0; i < rows[eip].size(); ++i) {
-//              std::cout << rows[eip][i] << " "; 
-//          }
-//        std::cout << std::endl;
         ++eip;
     }
    
@@ -309,11 +305,13 @@ void Interpreter::delete_key_from_map(std::map<std::string, T>& map, const std::
     }
 }
 
+// checking if token is declared variable name
 template<typename T>
 bool Interpreter::is_declared_variable(const std::string& token, const std::map<std::string, T>& vars) {
     return vars.find(token) != vars.end();
 }
 
+// checking if token is declared variable name
 bool Interpreter::is_declared_variable(const std::string& token) {
     return is_declared_variable(token, char_vars) ||
            is_declared_variable(token, integer_vars) ||
@@ -323,11 +321,13 @@ bool Interpreter::is_declared_variable(const std::string& token) {
            is_declared_variable(token, string_vars);
 }
 
+// checking if token is declared array name
 template<typename T>
 bool Interpreter::is_declared_array(const std::string& token, const std::map<std::string, std::vector<T>>& arr) {
     return arr.find(token) != arr.end();
 }
 
+// checking if token is declared array name
 bool Interpreter::is_declared_array(const std::string& token) {
     return is_declared_variable(token, char_arr) ||
            is_declared_variable(token, int_arr) ||
@@ -336,6 +336,7 @@ bool Interpreter::is_declared_array(const std::string& token) {
            is_declared_variable(token, bool_arr);
 }
 
+// filling variable with garbage
 void Interpreter::fill_with_garbage(const std::string& row0, const std::string& row1) {
     if (row0 == "char") {
         std::pair<std::string, char> var{row0, 'A' + (std::rand() % 26)};
@@ -358,6 +359,7 @@ void Interpreter::fill_with_garbage(const std::string& row0, const std::string& 
     }
 } 
 
+// filling variable with given literal
 void Interpreter::fill_var_with_given_value(const std::string& row0, const std::string& row1, const std::string& row3) {
     std::string tmp1 = row1;
     std::string tmp2 = row3;
@@ -390,6 +392,7 @@ void Interpreter::fill_var_with_given_value(const std::string& row0, const std::
 
 }
 
+// filling variable with given variable value
 void Interpreter::fill_var_with_given_variable_value(const std::string& row0, const std::string& row1, const std::string& row2) {
     std::string tmp1 = row1;
     std::string tmp2 = row2;
@@ -431,6 +434,7 @@ void Interpreter::fill_var_with_given_variable_value(const std::string& row0, co
     }   
 }
 
+// adding cases
 void Interpreter::adding_cases(const std::vector<std::string>& tokens, const std::string& dest_var, std::string& str1, std::string& str2) {
     std::string type = (tokens.size() == 6) ? tokens[0] : type_of_var(dest_var);
     std::string tmp;
@@ -462,6 +466,7 @@ void Interpreter::adding_cases(const std::vector<std::string>& tokens, const std
     } 
 }
 
+// subtraction cases
 void Interpreter::sub_cases(const std::vector<std::string>& tokens, std::string& dest_var, std::string& str1, std::string& str2) {
     std::string type = (tokens.size() == 6) ? tokens[0] : type_of_var(dest_var);
     std::string tmp;
@@ -488,6 +493,7 @@ void Interpreter::sub_cases(const std::vector<std::string>& tokens, std::string&
     } 
 }
 
+// multiplication cases
 void Interpreter::mul_cases(const std::vector<std::string>& tokens, std::string& dest_var, std::string& str1, std::string& str2) {
     std::string type = (tokens.size() == 6) ? tokens[0] : type_of_var(dest_var);
     std::string tmp;
@@ -514,6 +520,7 @@ void Interpreter::mul_cases(const std::vector<std::string>& tokens, std::string&
     }
 }
 
+// division cases
 void Interpreter::div_cases(const std::vector<std::string>& tokens, std::string& dest_var, std::string& str1, std::string& str2) {
     std::string type = (tokens.size() == 6) ? tokens[0] : type_of_var(dest_var);
     std::string tmp;
@@ -540,6 +547,7 @@ void Interpreter::div_cases(const std::vector<std::string>& tokens, std::string&
     }
 }
 
+// getting value of variable
 template <typename T>
 T Interpreter::get_value_of_var_by_type(const std::string& type, const std::string& var) {
     if (type == "char") {
@@ -558,6 +566,7 @@ T Interpreter::get_value_of_var_by_type(const std::string& type, const std::stri
 
 }
 
+// function for adding
 template <typename T>
 void Interpreter::add(std::string& res, std::string& str1, std::string& str2) {
     T operand1 = convert_to_type<T>(str1);
@@ -568,6 +577,7 @@ void Interpreter::add(std::string& res, std::string& str1, std::string& str2) {
     res = ss.str();
 }
 
+// function for subtraction
 template <typename T>
 void Interpreter::sub(std::string& res, std::string& op1, std::string& op2) {
     T operand1 = convert_to_type<T>(op1);
@@ -578,6 +588,7 @@ void Interpreter::sub(std::string& res, std::string& op1, std::string& op2) {
     res = ss.str();
 }
 
+// function for multiplication
 template <typename T>
 void Interpreter::multiply(std::string& res, std::string& op1, std::string& op2) {
     T operand1 = convert_to_type<T>(op1);
@@ -588,6 +599,7 @@ void Interpreter::multiply(std::string& res, std::string& op1, std::string& op2)
     res = ss.str();
 }
 
+// function for division
 template <typename T>
 void Interpreter::divide(std::string& res, std::string& op1, std::string& op2) {
     T operand1 = convert_to_type<T>(op1);

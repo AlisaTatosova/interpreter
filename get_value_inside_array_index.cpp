@@ -1,5 +1,6 @@
 #include "interpreter.h"
 
+// getting value inside array index
 std::string Interpreter::get_value_inside_array_index(const std::string& str) {
     std::pair<std::string, std::string> name_size = separate_name_and_size_in_array_declaration(str);
     std::string tmp = name_size.second;

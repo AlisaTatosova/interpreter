@@ -1,5 +1,6 @@
 #include "interpreter.h"
 
+// checking if given string is number
 bool Interpreter::is_number(const std::string& str) {
     if (str.empty()) {
         return false; // Empty string is not a number
@@ -34,6 +35,7 @@ bool Interpreter::is_number(const std::string& str) {
     }
 }
 
+// checking if given num is one byte integer
 bool Interpreter::is_one_byte_integer(int num) {
     // Check if the number is within the range of an 8-bit signed integer (-128 to 127)
     if (num >= -128 && num <= 127) {
@@ -46,6 +48,7 @@ bool Interpreter::is_one_byte_integer(int num) {
     return false;
 }
 
+// separating name and size in array declaration
 std::pair<std::string, std::string> Interpreter::separate_name_and_size_in_array_declaration(const std::string& str) {
     size_t open = str.find('[');
     size_t close = str.find(']');
@@ -68,6 +71,7 @@ std::pair<std::string, std::string> Interpreter::separate_name_and_size_in_array
     return {extract1, extract2}; // extract1 - name of arrray , extract2 - size
 }
 
+// extracting parentheses
 std::string Interpreter::extract_paren(const std::string& str, char brace) {
     std::string extract;
     if (brace == '(') {
@@ -78,6 +82,7 @@ std::string Interpreter::extract_paren(const std::string& str, char brace) {
     return extract;
 }
 
+// checking if last char is semicolon
 bool Interpreter::last_char_is_semicolon(std::string& str) {
     if (str[str.size() - 1] == ';') {
         return true;
@@ -85,6 +90,7 @@ bool Interpreter::last_char_is_semicolon(std::string& str) {
     return false;
 }
 
+// checking if last char is scope
 bool Interpreter::last_char_is_scope(std::string& str) {
     if (str[str.size() - 1] == '}' || str[str.size() - 1] == '{') {
         return true;
@@ -92,14 +98,17 @@ bool Interpreter::last_char_is_scope(std::string& str) {
     return false;
 }
 
+// checking if string contains semicolon
 bool Interpreter::contains_semicolon(const std::string& str) {
     return str.find(';') != std::string::npos;
 }
 
+// removing semicolon
 void Interpreter::remove_semicolon(std::string& input) {
     input = input.substr(0, input.size() - 1); // extract the substring without the semicolon
 }
 
+// checking existence of semicolon
 bool Interpreter::check_existence_of_semicolons(std::vector<std::string>& tokens, int& eip) {
     if (eip > 1 && tokens[tokens.size() - 1] != ";" && !last_char_is_semicolon(tokens[tokens.size() - 1])) {
         if (!(tokens[tokens.size()- 1] == "}" || tokens[tokens.size()- 1] == "{" || last_char_is_scope(tokens[tokens.size() - 1]))) {
@@ -121,6 +130,7 @@ void Interpreter::remove_semicolons(std::vector<std::string>& tokens) {
     }
 }
 
+// concatenate by removing spaces
 std::string Interpreter::concatenate_and_remove_spaces(const std::vector<std::string>& vector) {
     std::string concat;
     for (const std::string& str : vector) {
@@ -130,6 +140,7 @@ std::string Interpreter::concatenate_and_remove_spaces(const std::vector<std::st
     return concat;
 }
 
+// removing double quotes
 void Interpreter::remove_double_quotes(std::string& input) {
     if (input.front() == '"' && input.back() == '"') {
         input = input.substr(1, input.length() - 2);
@@ -138,6 +149,7 @@ void Interpreter::remove_double_quotes(std::string& input) {
     }
 }
 
+// removing single quotes
 void Interpreter::remove_single_quotes(std::string& input) {
     if (!input.empty() && input.front() == '\'') {
         input = input.substr(1);
@@ -150,6 +162,7 @@ void Interpreter::remove_single_quotes(std::string& input) {
     }
 }
 
+// checking existence of first and last double quotes
 bool Interpreter::has_first_and_last_double_quotes(const std::string& input) {
     if (input.size() >= 2) {
         return (input.front() == '"' && input.back() == '"');
@@ -158,6 +171,7 @@ bool Interpreter::has_first_and_last_double_quotes(const std::string& input) {
     }
 }
 
+// checking existence of first and last single quotes
 bool Interpreter::has_first_and_last_single_quotes(const std::string& input) {
     if (input.size() >= 2) {
         return (input.front() == '\'' && input.back() == '\'');
@@ -166,6 +180,7 @@ bool Interpreter::has_first_and_last_single_quotes(const std::string& input) {
     }
 }
 
+// checking for valid parentheses
 void Interpreter::is_valid_parentheses(std::stack<char>& st, char str) {
     if (!st.empty()) {
         if (st.top() == '{' && str == '}') {
@@ -182,6 +197,7 @@ void Interpreter::is_valid_parentheses(std::stack<char>& st, char str) {
     }
 }
 
+// checking if braces exist
 bool Interpreter::brace_exist(const std::vector<std::string>& vec) {
     for (const std::string& str : vec) {
         size_t open_brace1 = str.find("{");
@@ -198,6 +214,7 @@ bool Interpreter::brace_exist(const std::vector<std::string>& vec) {
     return false;
 }
 
+// finding brace
 std::string Interpreter::find_brace(const std::vector<std::string>& vec) {
     std::string found_braces;
 
@@ -268,6 +285,7 @@ std::string Interpreter::extract_plus_plus(const std::string& input) {
     return result;
 }
 
+// checking redefinition
 void Interpreter::check_redefinition(const std::string& str) {
     try {
         if (is_declared_variable(str)) {
@@ -301,6 +319,7 @@ bool Interpreter::check_open_figure_parent(const std::string& str) {
     return false;
 }
 
+// extracting figure scope
 bool Interpreter::check_close_figure_parent(const std::string& str) {
     if (str.back() == '}') {
         return true;
@@ -308,6 +327,7 @@ bool Interpreter::check_close_figure_parent(const std::string& str) {
     return false;
 }
 
+// extracting figure scope
 std::string Interpreter::extract_figure_paren(const std::string& str, char brace) {
     std::string extract;
     if (brace == '{') {
@@ -318,6 +338,7 @@ std::string Interpreter::extract_figure_paren(const std::string& str, char brace
     return extract;
 }
 
+// removing comma
 std::string Interpreter::remove_comma_at_the_end(const std::string& str) {
     std::string res;
     if (str.back() != ',') {
@@ -328,10 +349,12 @@ std::string Interpreter::remove_comma_at_the_end(const std::string& str) {
     return res;
 }
 
+// checking if string is single character
 bool Interpreter::is_single_char(const std::string& str) {
     return str.length() == 1;
 }
 
+// searching string in vector
 bool Interpreter::find_string_in_vector(const std::vector<std::string>& strings, const std::string& target) {
     // Use std::find to search for the target string in the vector
     auto it = std::find(strings.begin(), strings.end(), target);
@@ -344,6 +367,7 @@ bool Interpreter::find_string_in_vector(const std::vector<std::string>& strings,
     }
 }
 
+// getting type of variable or array
 std::string Interpreter::type_of_var(const std::string& token) {
     if (char_vars.find(token) != char_vars.end()) {
         return "char";

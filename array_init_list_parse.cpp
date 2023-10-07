@@ -1,5 +1,6 @@
 #include "interpreter.h"
 
+// parsing array init list
 void Interpreter::arr_init_list_parse(std::vector<std::string>& tokens) {
     if (!check_open_figure_parent(tokens[3])) {
         throw std::runtime_error("Error: there is no opening scope in array definition");

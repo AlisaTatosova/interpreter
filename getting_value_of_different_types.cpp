@@ -1,5 +1,6 @@
 #include "interpreter.h"
 
+// getting values of different types
 char Interpreter::get_value_of_char(const std::string& token) {
     for (auto it = char_vars.begin(); it != char_vars.end(); ++it) {
         if (it -> first == token) {

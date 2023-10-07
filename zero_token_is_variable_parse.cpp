@@ -1,5 +1,6 @@
 #include "interpreter.h"
 
+//function for parsing the line where first token is variable name
 void Interpreter::first_token_is_variable_parse(std::vector<std::string>& tokens) {
     if (tokens.size() == 3 && is_declared_variable(tokens[0]) && tokens[1] == "=") {
         if (!is_declared_variable(tokens[2])) { // case x = 5; // x is declared

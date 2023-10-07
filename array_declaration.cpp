@@ -1,5 +1,6 @@
 #include "interpreter.h"
 
+// parsing array declaration
 void Interpreter::array_declaration(std::vector<std::string>& tokens) {
     std::pair<std::string, std::string> array_name_size = separate_name_and_size_in_array_declaration(tokens[1]);
     int size = convert_to_type<int>(array_name_size.second);

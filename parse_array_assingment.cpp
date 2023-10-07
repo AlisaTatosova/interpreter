@@ -1,5 +1,6 @@
 #include "interpreter.h"
 
+// parsing array assignment
 void Interpreter::parse_array_assingment(std::vector<std::string>& tokens) { // case arr[i] = j;
     std::pair<std::string, std::string> name_size =  separate_name_and_size_in_array_declaration(tokens[0]);
     if (is_declared_array(name_size.first)) {

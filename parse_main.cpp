@@ -1,5 +1,6 @@
 #include "interpreter.h"
 
+//parsing main function
 bool Interpreter::parse_main(std::vector<std::string>& tokens, int& eip, bool& main_exists) {
     // checking existence of int main
     if (eip == 1 && tokens[0] == "int") {
