@@ -59,6 +59,7 @@ Parser: Reads the C++ source code from a file, breaks the input code into tokens
 Interpreter: Executes the code based on the parsed information.
 
 ## Examples
+```cpp
 #include <iostream>
 
 int main() {
