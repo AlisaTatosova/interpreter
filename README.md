@@ -59,13 +59,11 @@ Parser: Reads the C++ source code from a file, breaks the input code into tokens
 Interpreter: Executes the code based on the parsed information.
 
 ## Examples
-Here's an example of a target program:
 
 #include <iostream>
 int main() {
     int size = 5;
     int numbers[size];
-    
     int i = 0;
     while (i < size) {
         std::cout << "Enter number: ";
