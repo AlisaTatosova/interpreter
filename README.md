@@ -3,10 +3,11 @@
 ## Table of Contents
 1. [Introduction](#introduction)
 2. [Usage](#usage)
-3. [Project Files](#project-files)
-4. [Design and Structure](#design-and-structure)
-5. [Examples](#examples)
-6. 
+3. [Features](#features)
+4. [Project Files](#project-files)
+5. [Design and Structure](#design-and-structure)
+6. [Examples](#examples)
+   
 ## Introduction
 This is a simple C++ interpreter that can execute C++ programs following a specific structure. It reads and executes C++ source code from a file, which includes variable declarations, loops, input/output statements, and basic mathematical operations.
 
@@ -18,6 +19,15 @@ To use this interpreter, follow these steps:
    
 2. Run the interpreter:
 ./interpreter
+
+## Features
+1) Support for following data Types: char, int, float, double, bool and string.
+2) Support for mathematical operations: +, -, *, /, +=, -=, *=, /=
+3) Support of postfix and prefix increment and decrement.
+4) Control Structures: Support of if statement and while loop.
+5) Support of break and continue.
+6) Support of array declarartion of types int, float, double, bool.Also array declaration with initializer list.
+7) Support of std::cin and std::cout in/out.
 
 ## Project Files
 
@@ -52,7 +62,6 @@ Interpreter: Executes the code based on the parsed information.
 Here's an example of a target program:
 
 #include <iostream>
-
 int main() {
     int size = 5;
     int numbers[size];
@@ -82,7 +91,7 @@ int main() {
 
     std::cout << "Sum of array elements: " << sum << std::endl;
     std::cout << "Product of array elements: " << product << std::endl;
-}
+ }
 
 Interpreter is able to execute this program and display the sum and product of the array elements.
 
