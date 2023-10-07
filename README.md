@@ -68,7 +68,7 @@ int main() {
     
     int i = 0;
     while (i < size) {
-        std::cout << "Enter number: ";
+        std::cout << "Enter number:";
         std::cin >> numbers[i];
         i++;
     }
@@ -89,9 +89,10 @@ int main() {
         counter++;
     }
 
-    std::cout << "Sum of array elements: " << sum << std::endl;
-    std::cout << "Product of array elements: " << product << std::endl;
+    std::cout << "Sum of array elements:" << sum << std::endl;
+    std::cout << "Product of array elements:" << product << std::endl;
 }
+
 
 Interpreter is able to execute this program and display the sum and product of the array elements.
 
