@@ -1,0 +1,44 @@
+#include <iostream>
+
+int main() {
+    int num = 10;
+    char ch = 'a';
+    bool flag = true; 
+    string str = "hello world";
+    int i = 0;
+    int j = 11;
+    while (i < j) {
+      std::cout << str[i];
+      ++i;
+    }
+
+    if (i == j) {
+      std::cout << "Yes";
+    }
+
+    int arr[5] = {1, 2, 3, 4, 5};
+    i = 0;
+    j  = 5;
+
+    while (i < j) {
+      if (i == 4) {
+	      break;
+      }
+      std::cout << arr[i];
+      ++i; 
+    }
+
+    char array[3];
+    i = 0;
+    j = 0;
+    while (i < j) {
+      std::cin >> array[i];
+      ++i;
+    }
+    num += 100;
+    num = num + 99;
+    if (num > 0) {
+	    std::cout << num << std::endl;
+    }
+
+} 

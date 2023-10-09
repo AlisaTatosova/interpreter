@@ -1,0 +1,24 @@
+#include <iostream>
+
+int main() {
+    int size = 6;
+    char arr_char[size] = {'a', 'b', 'c', 'd', 'e', 'f'};
+    arr_char[0] = 'p';
+    
+    char k = arr_char[5];
+    std::cout << k << std::endl;
+
+    int i = 0;
+    while (i < size) {
+        std::cout << arr_char[i] << std::endl;
+        ++i; 
+    }
+
+    bool arr_bool[4] = {true, false, 0, 1};
+
+    i = 0;
+    while (i < 4) {
+        std::cout << arr_bool[i] << std::endl;
+        ++i; 
+    }
+}

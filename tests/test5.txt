@@ -1,0 +1,35 @@
+#include <iostream>
+
+int main() {
+    int size = 5;
+    int numbers[size];
+
+    int i = 0;
+    while (i < size) {
+        std::cout << "Enter number:";
+        std::cin >> numbers[i];
+        i++;
+    }
+
+    std::cout << "Array Contents:";
+    int j = 0;
+    while (j < size) {
+        std::cout << numbers[j] << std::endl;
+        j++;
+    }
+
+    int sum = 0;
+    int product = 1;
+    int counter = 0;
+    while (counter < size) {
+        sum += numbers[counter];
+        product *= numbers[counter];
+        counter++;
+    }
+
+    std::cout << "Sum of array elements:";
+    std::cout << sum << std::endl;
+    std::cout << "Product of array elements:";
+    std::cout << product << std::endl;
+
+}
