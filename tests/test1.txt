@@ -1,0 +1,28 @@
+#include <iostream>
+
+int main() {
+    double x = 15.5;
+    int y = 17;
+    if (y == 17) {
+        int y = 56;
+        std::cout << "inside if y:";
+        std::cout << y << std::endl;
+    }
+
+    std::cout << "outside if y:";
+    std::cout << y << std::endl;
+
+    int size = 5;
+    int arr[size] = {1, 2, 7, 2, 6};
+
+    int i = 0;
+
+    while (i < size) {
+        if (arr[i] == 2) {
+            ++i;
+            continue;
+        }
+        std::cout << arr[i] << std::endl;
+        ++i;
+    }
+}
