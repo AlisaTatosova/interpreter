@@ -7,6 +7,7 @@ char Interpreter::get_value_of_char(const std::string& token) {
             return it -> second.second;
         }
     }
+    return ' ';
 }
 
 int Interpreter::get_value_of_int(const std::string& token) {
@@ -15,6 +16,7 @@ int Interpreter::get_value_of_int(const std::string& token) {
             return it -> second.second;
         }
     }
+    return 0;
 }
 
 double Interpreter::get_value_of_double(const std::string& token) {
@@ -23,6 +25,7 @@ double Interpreter::get_value_of_double(const std::string& token) {
             return it -> second.second;
         }
     }
+    return 0;
 }
 
 float Interpreter::get_value_of_float(const std::string& token) {
@@ -31,6 +34,7 @@ float Interpreter::get_value_of_float(const std::string& token) {
             return it -> second.second;
         }
     }
+    return 0;
 }
 
 bool Interpreter::get_value_of_bool(const std::string& token) {
@@ -39,6 +43,7 @@ bool Interpreter::get_value_of_bool(const std::string& token) {
             return it -> second.second;
         }
     }
+    return 0;
 }
 
 std::string Interpreter::get_value_of_string(const std::string& token) {
@@ -47,4 +52,5 @@ std::string Interpreter::get_value_of_string(const std::string& token) {
             return it -> second.second;
         }
     }
+    return "";
 }

@@ -44,6 +44,7 @@ private:
     bool parse_while(std::vector<std::string>& tokens); //function for parsing the line where first token is while loop
     void increment_decrement_parse(const std::vector<std::string>& tokens); // parsing increment decrement
     void parse_array_assingment(std::vector<std::string>& tokens); // parsing array assignment
+    void parse_value_in_array_to_var(const std::string& tokens0, const std::string& tokens1, const std::string& tokens2);
     void array_declaration(std::vector<std::string>& tokens); // parsing array declaration
     void arr_init_list_parse(std::vector<std::string>& tokens);  // parsing initializer list declaration
     void cout(std::vector<std::string>& tokens); //cout

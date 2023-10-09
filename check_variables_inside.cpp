@@ -18,17 +18,13 @@ std::pair<std::string, std::string> Interpreter::check_variables_inside(const st
     } else if (is_declared_array(separate_name_and_size_in_array_declaration(str1).first) && is_declared_array(separate_name_and_size_in_array_declaration(str2).first)) {
         tmp1 = get_value_inside_array_index(str1);
         tmp2 = get_value_inside_array_index(str2);
-    } 
-    ///!!!!!!!!!!!!!!!!!!!!!!!!!
-    else if(is_declared_array(separate_name_and_size_in_array_declaration(str1).first) && is_declared_variable(str2)) {
+    } else if(is_declared_array(separate_name_and_size_in_array_declaration(str1).first) && is_declared_variable(str2)) {
         tmp1 = get_value_inside_array_index(str1);
         get_var_value_inside(tmp2);
     } else if (is_declared_variable(str1) && is_declared_array(separate_name_and_size_in_array_declaration(str2).first)) {
         get_var_value_inside(tmp1);
         tmp2 = get_value_inside_array_index(str2);
-    } // !!!!!!!!!!!!!!!!!!!!
-
-    else if (is_declared_array(separate_name_and_size_in_array_declaration(str1).first) && !is_declared_array(separate_name_and_size_in_array_declaration(str2).first)) {
+    } else if (is_declared_array(separate_name_and_size_in_array_declaration(str1).first) && !is_declared_array(separate_name_and_size_in_array_declaration(str2).first)) {
         tmp1 = get_value_inside_array_index(str1);
 
         if (!is_number(tmp2) && !has_first_and_last_double_quotes(tmp2) && !has_first_and_last_single_quotes(tmp2) && tmp2 != "false" && tmp2 != "true") {

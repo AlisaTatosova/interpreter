@@ -560,10 +560,8 @@ T Interpreter::get_value_of_var_by_type(const std::string& type, const std::stri
         return get_value_of_float(var);
     } else if (type == "bool") {
         return get_value_of_bool(var);
-    } else if (type == "string") {
-    } 
-    std::cout << var;
-
+    } else if (type == "string") {} 
+	return 0;
 }
 
 // function for adding

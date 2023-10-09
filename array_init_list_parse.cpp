@@ -11,6 +11,10 @@ void Interpreter::arr_init_list_parse(std::vector<std::string>& tokens) {
     }
 
     std::pair<std::string, std::string> array_name_size = separate_name_and_size_in_array_declaration(tokens[1]); // this is for checking existence of []
+    std::string name = array_name_size.first;
+    if (is_declared_array(name)) {
+        throw std::runtime_error("Array with such name is already declared");
+    }
     std::string extract1 = remove_comma_at_the_end(extract_figure_paren(tokens[3], '{')); // removing { at front and also removing , at end
     std::string extract2 = extract_figure_paren(tokens[tokens.size() - 1], '}');
 
@@ -69,7 +73,8 @@ void Interpreter::arr_init_list_parse(std::vector<std::string>& tokens) {
         floats[0] = convert_to_type<float>(extract1);
         int j = 4;
         for (int i = 1; i < floats.size() - 1; ++i) {
-            std::string comma_removed = remove_comma_at_the_end(tokens[j]);                floats[i] = convert_to_type<float>(comma_removed);
+            std::string comma_removed = remove_comma_at_the_end(tokens[j]);   
+            floats[i] = convert_to_type<float>(comma_removed);
             ++j;
         }
 

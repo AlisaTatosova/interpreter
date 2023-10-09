@@ -3,6 +3,11 @@
 // parsing array declaration
 void Interpreter::array_declaration(std::vector<std::string>& tokens) {
     std::pair<std::string, std::string> array_name_size = separate_name_and_size_in_array_declaration(tokens[1]);
+    std::string name = array_name_size.first;
+    if (is_declared_array(name)) {
+        throw std::runtime_error("Array with such name is already declared");
+    }
+    
     int size = convert_to_type<int>(array_name_size.second);
     if (tokens[0] == "char") {
         std::vector<char> chars(size);
